@@ -38,10 +38,7 @@ and third-party tools including:
 ## Solution Components
 
 
-<!-- This does not need to be completed during the initial submission phase  
-
-Provide a brief overview of the components involved with this project. e.g Python /  -->
-
+This python project primarily uses the Cisco security APIs to gather threat information and enforce policy.  Underneath the hood it uses a Flask/Jinja2 framework for UX and TinyDB to store the results of API calls to minimize the number of calls and reduce latency of loading information.
 
 ## Usage
 
@@ -53,13 +50,12 @@ Provide a brief overview of how to use the solution  -->
 
 ## Installation
 
-git clone https://wwwin-github.cisco.com/brsak/irflow
+git clone https://wwwin-github.cisco.com/brsak/irflow.git  <br>
 pip install -r requirements.txt
 
 ## Documentation
 
-Pointer to reference documentation for this project.
-
+Documentation and video demonstration coming soon.
 
 ## License
 
