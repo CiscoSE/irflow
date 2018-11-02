@@ -1,0 +1,18 @@
+# Replace each variable with details specific to your environment
+
+fmc_hostname = "cisco.tld.cisco.com"
+fmc_user = "username"
+fmc_password = "password"
+amp4e_host = "api.amp.cisco.com"
+amp4e_client_id = "ampclientid"
+amp4e_api_key = "apikey"
+ise_host = "isehostname"
+ise_username = "iseuser"
+ise_password = "isepassword"
+umbrella_host = "s-platform.api.opendns.com"
+umbrella_key = "umbrella-enforce-key"
+investigate_host = "investigate.api.umbrella.com"
+investigate_token = "investigatetoken"
+threatgrid_host = "panacea.threatgrid.com"
+threatgrid_key = "tgkey"
+threatgrid_feed = "https://" + threatgrid_host + "/api/v3/feeds/ransomware-dns_2017-12-08.stix?api_key=" + threatgrid_key"
