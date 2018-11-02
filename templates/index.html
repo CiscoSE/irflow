@@ -1,0 +1,49 @@
+{% extends 'base_layout.html' %}
+
+{% block mainpanel %}
+
+<center><h1 id="irflow">IR Flow - Incident Response Workflow for Threat Identification, Containment, and Research</h1></center>
+
+<br><br>
+
+<h3 id="description">Description</h1>
+
+<p>IR Flow allows a security analyst to automate and accelerate incident response procedures using the Cisco Security portfolio. The tool supports two distict modes, portal and headless.  When running in portal mode, the analyst can query AMP and Cognitive Threat Analytics for current threats, use Investigate and Threat Grid to research them, and mitigate the threat using ISE, Firepower, and/or Umbrella.  In headless mode, the tool can be configured to look for indications of compromize and quarantine affected hosts automatically.</p>
+
+<hr>
+
+<br>
+
+<center>
+	<div class="col-md-6">
+    <div class="subheader text-center">Incident Response Workflow</div>
+        <div class="ui-steps ui-steps--vertical">
+            <div class="ui-step">
+                <div class="step__icon">1</div>
+                <div class="step__label">Collect Indications of Compromise (AMP, CTA)</div>
+            </div>
+            <div class="ui-step">
+                <div class="step__icon">2</div>
+                <div class="step__label">Quarantine Infected Hosts (ISE)</div>
+            </div>
+            <div class="ui-step">
+                <div class="step__icon">3</div>
+                <div class="step__label">Find Malware Samples (Threat Grid)</div>
+            </div>
+            <div class="ui-step">
+                <div class="step__icon">4</div>
+                <div class="step__label">Collect and Analyse Suspect Domains (Investigate)</div>
+            </div>
+            <div class="ui-step">
+                <div class="step__icon">5</div>
+                <div class="step__label">Block Malicious Domains using Black List (Umbrella)</div>
+            </div>
+            <div class="ui-step">
+                <div class="step__icon">6</div>
+                <div class="step__label">Add Custom Intelligence Feed (Firepower)</div>
+            </div>
+        </div>
+    </div>
+</center>
+
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'base_layout.html' %}
+{% set active_sidebar = "threats" %}
+
+{% block mainpanel %}
+
+<!-- 
+AJAX to call the function to quarantine the hosts
+--> 
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type=text/javascript>
+        $(function() {
+          $('a#nuke').bind('click', function() {
+            $.getJSON('/nuke_from_space',
+                function(data) {
+              //do nothing
+            });
+            return false;
+
+          });
+</script>
+
+<br>
+
+<div class="col-md-6">
+      <div class="ui-steps ui-steps--vertical">
+            <div class="ui-step active">
+                <div class="step__icon">2</div>
+                <div class="step__label">Quarantine Infected Hosts (ISE)</div>
+            </div>
+      </div>
+      <div class="ui-steps ui-steps--vertical">
+            <div class="ui-step active">
+                <div class="step__icon">5</div>
+                <div class="step__label">Block Malicious Domains using Black List (Umbrella)</div>
+            </div>
+      </div>
+</div>
+
+<hr>
+
+<div class="container">
+  <div style="padding-top: 20px" class="responsive-table">
+    <div class="responsive-table">
+      <table id="threat-datatable" class="table table--bordered">
+          <thead>
+              <tr>
+                  <th>Hostname</th>
+                  <th>IP Address</th>
+                  <th>MAC Address</th>
+              </tr>
+          </thead>
+          <tbody>
+          {% for item in hosts %}
+          <tr>
+          <td>{{item['hostname']}}</td>
+          <td>{{item['ip']}}</td>
+          <td>{{item['mac']}}</td>
+          {% if item['quarantine'] == "False" %}
+          <td><form action="/nuke_from_space/{{item['mac']}}" method="POST"> <button type ="submit" class="btn btn--small">Quarantine</button></form></td>
+          {% elif item['quarantine'] == "True" %}
+          <td><form action="/unnuke_from_space/{{item['mac']}}" method="POST"> <button type ="submit" class="btn btn--small">Unquarantine</button></form></td>
+          {% endif %}
+          </tr>
+          {% endfor %}
+          </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+<!-- disable footer for this page  -->
+{% block footer %}{% endblock %}
