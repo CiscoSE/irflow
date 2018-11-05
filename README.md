@@ -24,6 +24,7 @@ Our solution will levegerage the following Cisco technologies:
 * [Threat Grid](https://www.cisco.com/c/en/us/products/security/threat-grid/index.html)
 * [Identity Services Engine](https://www.cisco.com/c/en/us/products/security/identity-services-engine/index.html)
 * [Cognitive Intelligence](https://www.cisco.com/c/en/us/products/security/cognitive-threat-analytics/index.html)
+* [Firepower Management Center/Firepower Threat Defense](https://www.cisco.com/c/en/us/products/security/firewalls/index.html)
 
 and third-party tools including:
 
@@ -38,7 +39,7 @@ and third-party tools including:
 ## Solution Components
 
 
-This python project primarily uses the Cisco security APIs to gather threat information and enforce policy.  Underneath the hood it uses a Flask/Jinja2 framework for UX and TinyDB to store the results of API calls to minimize the number of calls and reduce latency of loading information.
+This python project primarily uses the Cisco security APIs to gather threat information and enforce policy.  Underneath the hood it uses a Flask/Jinja2 framework, utilizing the Cisco UI Kit, for UX and TinyDB to store the results of API calls to minimize the number of calls and reduce latency of loading information.
 
 ## Usage
 
@@ -52,6 +53,7 @@ Provide a brief overview of how to use the solution  -->
 
 git clone https://wwwin-github.cisco.com/brsak/irflow.git  <br>
 pip install -r requirements.txt
+python ./app.py
 
 ## Documentation
 
