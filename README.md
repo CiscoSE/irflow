@@ -52,7 +52,7 @@ Provide a brief overview of how to use the solution  -->
 ## Installation
 
 git clone https://wwwin-github.cisco.com/brsak/irflow.git  <br>
-pip install -r requirements.txt
+pip install -r requirements.txt <br>
 python ./app.py
 
 ## Documentation
