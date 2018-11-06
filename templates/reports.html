@@ -21,6 +21,21 @@
 	<span>Patient Zero: System and User Information</span>
 </div>
 
+<table style="width:100%">
+  <tr>
+    <td>Computer Name: <input type="text" name="computer_name"></td>
+    <td>Logged-in Username: <input type="text" name="username"></td> 
+  </tr>
+  <tr>
+    <td>Operating System: <input type="text" name="operating_system"></td>
+    <td>MAC Address: <input type="text" name="mac_address"></td> 
+  </tr>
+   <tr>
+    <td>Vulnerable Applications: <input type="text" name="vulnerable_apps"></td>
+    <td>Host IP Address(es): <input type="text" name="host_ip_addresses"></td> 
+  </tr>
+</table>
+
 <br>
 
 <div class="hero hero--vibblue">
@@ -30,6 +45,17 @@
 <div class="hero hero--ltgray">
 	<span>Attacker Infrastructure and Dropper File</span>
 </div>
+
+<table style="width:100%">
+  <tr>
+    <td>Malicious Domains: <input type="text" name="malicious_domains"></td>
+    <td>IP Addresses: <input type="text" name="malicious_ips"></td> 
+  </tr>
+  <tr>
+    <td>Dropper File Name: <input type="text" name="dropper_file_name"></td>
+    <td>Dropper File Type: <input type="text" name="dropper file_type"></td> 
+  </tr>
+</table>
 
 <br>
 
@@ -41,6 +67,19 @@
 	<span>Infection Vector</span>
 </div>
 
+<table style="width:100%">
+  <tr>
+    <td><input type="checkbox" name="email_attachment">Email: Attachment</td>
+    <td><input type="checkbox" name="web_phishing">Web: Phishing Link</td>
+    <td><input type="checkbox" name="active_exploitation">Active Exploitation</td>
+  </tr>
+  <tr>
+    <td><input type="checkbox" name="email_phishing">Email: Phishing Link</td>
+    <td><input type="checkbox" name="web_exploit">Web: Exploit Kit</td>
+    <td><input type="checkbox" name="other">Other</td>
+  </tr>
+</table>
+
 <br>
 
 <div class="hero hero--vibblue">
@@ -50,6 +89,16 @@
 <div class="hero hero--ltgray">
 	<span>Malware Binary</span>
 </div>
+
+<table style="width:100%">
+  <tr>
+    <td>File Name: <input type="text" name="malware_file_name"></td>
+    <td>File Type: <input type="text" name="malware_file_type"></td>
+  </tr>
+  <tr>
+    <td>Malware Family Name: <input type="text" name="malware_family_name"></td>
+  </tr>
+</table>
 
 <br>
 
@@ -61,6 +110,16 @@
 	<span>Command & Control (C2) Communications</span>
 </div>
 
+<table style="width:100%">
+  <tr>
+    <td>Domains Contacted: <input type="text" name="domains_contacted"></td>
+    <td>IPs Contacted: <input type="text" name="ips_contacted"></td>
+  </tr>
+  <tr>
+    <td>URLs Contacted: <input type="text" name="urls_contacted"></td>
+  </tr>
+</table>
+
 <br>
 
 <div class="hero hero--vibblue">
@@ -70,6 +129,21 @@
 <div class="hero hero--ltgray">
 	<span>Threat Behavior</span>
 </div>
+
+<table style="width:100%">
+  <tr>
+    <td> <input type="checkbox"> Process injection detected? (if so, which process) <input type="text" name="process_injected"></td>
+  </tr>
+  <tr>
+    <td><input type="checkbox"> Escalation of privileges detected? (if so, which method) <input type="text" name="priv_escalation"></td>
+  </tr>
+  <tr>
+    <td><input type="checkbox"> PowerShell / scripting commands detected? (if so, list) <input type="text" name="powershell_script"></td>
+  </tr>
+  <tr>
+    <td>Known Malware Capabilities: <input type="text" name="known_malware"></td>
+  </tr>
+</table>
 
 <br>
 
@@ -81,6 +155,26 @@
 	</div>
 </div>
 
+<table style="width:100%">
+  <tr>
+    <td>Date/Time of Patient Zero initial infection: <input type="date" name="date"> </td>
+  </tr>
+  <tr>
+    <td>Total number of systems affected: <input type="text" name="number_affected"></td>
+  </tr>
+  <tr>
+    <td>Timeline:</td>
+    <td>|-----------|-----------|-----------|-----------|-----------|--></td>
+  </tr>
+  <tr>
+    <td>Security recommendations:</td>
+  </tr>
+</table>
+
+<textarea name="recommendations" cols="40" rows="5"></textarea> <br>
+
+<button class="btn btn--primary">Save<input type="submit"></button>
+<button class="btn btn--primary">Submit<input type="submit"></button>
 
 {% endblock %}
 
