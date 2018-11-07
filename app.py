@@ -131,6 +131,35 @@ def nukeFromSpace(iseuser, isepassword, mac_address = "66:96:a5:94:76:32"):
     hosts_db.update({'quarantine': 'true'}, querydb.mac == mac_address)
     print(response.text)
 
+def unnukeFromSpace(iseuser, isepassword, mac_address = "66:96:a5:94:76:32"):
+    '''
+    Leverages Adaptive Network Control on ISE to unquarantine the devices after they have been quarantined.
+    '''
+
+    url = "https://" + ise_username + ":" + ise_password + "@" + ise_host + "/ers/config/ancendpoint/clear"
+
+    payload = { "OperationAdditionalData": {
+                "additionalData": [{
+                "name": "macAddress",
+                "value": mac_address
+               },
+               {
+                "name": "policyName",
+                 "value": "ANC-KickFromNetwork"
+                }]
+               }
+               }
+    headers = {
+    'Content-Type': "application/json",
+    'Accept': "application/json",
+    'Cache-Control': "no-cache"
+    }
+
+    response = requests.request("PUT", url, data=payload, headers=headers)
+
+    hosts_db.update({'quarantine': 'false'}, querydb.mac == mac_address)
+    print(response.text)
+
 def getSamplesFromTG(threatgrid_host,threatgrid_key,sha256):
     '''
     Pull information about the identified malware from ThreatGrid.
