@@ -88,8 +88,16 @@ def research_malware(threat_name):
 	else:
 		return "<h2> Invalid Request </h2>"
 
-@app.route('/reports')
+@app.route('/reports', methods = ['GET', 'POST'])
 def reports():
+	if request.method == 'POST':
+		result = request.form
+		incident_report = open("Incident Report.txt", "w")
+		for key, value in result.items():
+			incident_report.write(key + ": " + value + "\r\n")
+		incident_report.close()
+		return render_template('reports.html')
+
 	if request.method == 'GET':
 		return render_template('reports.html')
 	else:
