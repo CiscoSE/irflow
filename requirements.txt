@@ -3,3 +3,4 @@ Jinja2==2.10
 requests==2.19.1
 tinydb==3.11.0
 urllib3==1.23
+ciscosparkapi==0.9.2

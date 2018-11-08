@@ -33,13 +33,17 @@ SOFTWARE.
 """
 
 import requests # import requests library
-requests.packages.urllib3.disable_warnings()
+try:
+    requests.packages.urllib3.disable_warnings()
+except:
+    pass
 
 import datetime #import datetime for ISO 8601 timestamps
 import getpass  #import getpass to mask password entries
 from tinydb import TinyDB,Query
 from pprint import pprint #import Pretty Print for formated text output
 from flask import Flask  #import web application
+import ciscosparkapi #Webex Teams features for creating rooms
 
 
 app = Flask(__name__)
@@ -59,6 +63,7 @@ from config import threatgrid_host
 from config import investigate_token
 from config import umbrella_key
 from config import umbrella_secret
+from config import webex_teams_access_token
 
 #Initialize database for storing data locally
 hosts_db = TinyDB('hosts_db.json')
@@ -73,6 +78,8 @@ def main():
     print ('Starting...')
     #findMalwareEventsFromCTA()
     #findMalwareEvents(amp4e_client_id, amp4e_api_key)
+    #incident_room = create_new_webex_teams_incident_room(webex_teams_access_token)
+    #attach_incident_report(webex_teams_access_token, incident_room)
 
 def findMalwareEventsFromAMP(amp4e_client_id, amp4e_api_key):
     '''
@@ -359,6 +366,18 @@ def blockWithUmbrella(domain,umbrella_key):
     response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
 
     print(response.text)
+
+def create_new_webex_teams_incident_room(webex_teams_access_token):
+    webex_teams = ciscosparkapi.CiscoSparkAPI(webex_teams_access_token)
+    timestamp = datetime.datetime.now().timestamp()
+    time = datetime.datetime.now().isoformat()
+    incident_room = webex_teams.rooms.create("Incident %(time)s Room Created %(time)s" % {'incident' : timestamp, 'time': time})
+    return (incident_room.id)
+
+def attach_incident_report(webex_teams_access_token, incident_room):
+    #incident_room = "Y2lzY29zcGFyazovL3VzL1JPT00vY2Q0MWNjMzAtZTM4Zi0xMWU4LWE1ZDItZjFkOTJhNmJmNGI3"
+    webex_teams = ciscosparkapi.CiscoSparkAPI(webex_teams_access_token)
+    message = webex_teams.messages.create(incident_room, text = "Test")
 
 if __name__ == '__main__':
     import os
