@@ -78,7 +78,7 @@ def main():
     print ('Starting...')
     #findMalwareEventsFromCTA()
     #findMalwareEvents(amp4e_client_id, amp4e_api_key)
-    #incident_room = create_new_webex_teams_incident_room(webex_teams_access_token)
+    incident_room = create_new_webex_teams_incident_room(webex_teams_access_token)
     #attach_incident_report(webex_teams_access_token, incident_room)
 
 def findMalwareEventsFromAMP(amp4e_client_id, amp4e_api_key):
@@ -372,13 +372,22 @@ def create_new_webex_teams_incident_room(webex_teams_access_token):
     timestamp = datetime.datetime.now().timestamp()
     time = datetime.datetime.now().isoformat()
     incident_room = webex_teams.rooms.create("Incident %(incident)s Room Created %(time)s" % {'incident': timestamp, 'time': time})
+    md = '''
+    ## New Incident %(incident)s
+
+    ###Patient Zero
+    Computer Name:
+
+    Logged-in User:
+
+    Host IP Address:
+
+    Zendesk Link: [Incident](http://link) 
+    
+    ''' % {'incident': timestamp}
+    message = webex_teams.messages.create(incident_room.id, markdown = md, files = ['./Incident Report.txt'])
     return (incident_room.id)
-
-def attach_incident_report(webex_teams_access_token, incident_room):
-    #incident_room = "Y2lzY29zcGFyazovL3VzL1JPT00vY2Q0MWNjMzAtZTM4Zi0xMWU4LWE1ZDItZjFkOTJhNmJmNGI3"
-    webex_teams = ciscosparkapi.CiscoSparkAPI(webex_teams_access_token)
-    message = webex_teams.messages.create(incident_room, text = "Test")
-
+    
 if __name__ == '__main__':
     import os
     HOST = os.environ.get('SERVER_HOST', 'localhost')
@@ -387,10 +396,9 @@ if __name__ == '__main__':
     except ValueError:
         PORT = 5555
     app.run(HOST, PORT, debug=True)
+'''
 
 #Start the App
 
-'''
 if __name__ == "__main__":
     main()
-'''
