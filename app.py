@@ -369,9 +369,10 @@ def blockWithUmbrella(domain,umbrella_key):
 
 def create_new_webex_teams_incident_room(webex_teams_access_token):
     webex_teams = ciscosparkapi.CiscoSparkAPI(webex_teams_access_token)
-    timestamp = datetime.datetime.now().timestamp()
-    time = datetime.datetime.now().isoformat()
-    incident_room = webex_teams.rooms.create("Incident %(incident)s Room Created %(time)s" % {'incident': timestamp, 'time': time})
+    timestamp = int(datetime.datetime.now().timestamp())
+    time = datetime.datetime.now()
+    formatted_time = time.strftime("%Y-%m-%d %H:%M")
+    incident_room = webex_teams.rooms.create("Incident %(incident)s Room Created %(time)s CST/CDT" % {'incident': timestamp, 'time': formatted_time})
     md = '''
     ## New Incident %(incident)s
 
@@ -387,7 +388,8 @@ def create_new_webex_teams_incident_room(webex_teams_access_token):
     ''' % {'incident': timestamp}
     message = webex_teams.messages.create(incident_room.id, markdown = md, files = ['./Incident Report.txt'])
     return (incident_room.id)
-    
+
+
 if __name__ == '__main__':
     import os
     HOST = os.environ.get('SERVER_HOST', 'localhost')
@@ -397,8 +399,8 @@ if __name__ == '__main__':
         PORT = 5555
     app.run(HOST, PORT, debug=True)
 '''
-
 #Start the App
 
 if __name__ == "__main__":
     main()
+'''
