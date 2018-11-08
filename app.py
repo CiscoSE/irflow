@@ -371,7 +371,7 @@ def create_new_webex_teams_incident_room(webex_teams_access_token):
     webex_teams = ciscosparkapi.CiscoSparkAPI(webex_teams_access_token)
     timestamp = datetime.datetime.now().timestamp()
     time = datetime.datetime.now().isoformat()
-    incident_room = webex_teams.rooms.create("Incident %(time)s Room Created %(time)s" % {'incident' : timestamp, 'time': time})
+    incident_room = webex_teams.rooms.create("Incident %(incident)s Room Created %(time)s" % {'incident': timestamp, 'time': time})
     return (incident_room.id)
 
 def attach_incident_report(webex_teams_access_token, incident_room):
