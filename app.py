@@ -367,25 +367,26 @@ def blockWithUmbrella(domain,umbrella_key):
 
     print(response.text)
 
-def create_new_webex_teams_incident_room(webex_teams_access_token):
+def create_new_webex_teams_incident_room(webex_teams_access_token, incident):
+
     webex_teams = ciscosparkapi.CiscoSparkAPI(webex_teams_access_token)
     timestamp = int(datetime.datetime.now().timestamp())
     time = datetime.datetime.now()
     formatted_time = time.strftime("%Y-%m-%d %H:%M")
-    incident_room = webex_teams.rooms.create("Incident %(incident)s Room Created %(time)s CST/CDT" % {'incident': timestamp, 'time': formatted_time})
+    incident_room = webex_teams.rooms.create("Incident %(incident)s Created %(formatted_time)s CST/CDT" % {'incident': timestamp, 'formatted_time': formatted_time})
     md = '''
     ## New Incident %(incident)s
 
-    ###Patient Zero
-    Computer Name:
+    ### Patient Zero
+    Computer Name: %(computer_name)s
 
-    Logged-in User:
+    Logged-in User: %(username)s
 
-    Host IP Address:
+    Host IP Address: %(host_ip_addresses)s
 
     Zendesk Link: [Incident](http://link) 
     
-    ''' % {'incident': timestamp}
+    ''' % {'incident': timestamp, 'computer_name': incident['computer_name'], 'username': incident['username'], 'host_ip_addresses': incident['host_ip_addresses']}
     message = webex_teams.messages.create(incident_room.id, markdown = md, files = ['./Incident Report.txt'])
     return (incident_room.id)
 

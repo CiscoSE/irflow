@@ -1,15 +1,11 @@
 from flask import Flask, request, render_template
 import jinja2
+
 from app import app
 from app import hosts_db
 from app import domains_db
 from app import threats_db
 from app import querydb
-from app import nukeFromSpace
-from config import ise_username
-from config import ise_password
-from app import blockWithUmbrella
-from app import umbrella_key
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -42,26 +38,34 @@ def response():
 #Process for sending Quarantined MAC to ISE
 @app.route('/nuke_from_space/<string:mac>', methods=['POST'])
 def nuke_from_space(mac):
-    #nukeFromSpace(ise_username, ise_password, mac)
-    print (mac)
-    hosts_db.update({'quarantine': 'True'}, querydb.mac == mac)
-    return render_template('response.html', hosts=hosts_db)
+	from config import ise_username
+	from config import ise_password
+	from app import nukeFromSpace
+	#nukeFromSpace(ise_username, ise_password, mac
+	print (mac)
+	hosts_db.update({'quarantine': 'True'}, querydb.mac == mac)
+	return render_template('response.html', hosts=hosts_db)
 
 #Process for removing Quarantined MAC to ISE
 @app.route('/unnuke_from_space/<string:mac>', methods=['POST'])
 def unnuke_from_space(mac):
-    #nukeFromSpace(ise_username, ise_password, mac)
-    print (mac)
-    hosts_db.update({'quarantine': 'False'}, querydb.mac == mac)
-    return render_template('response.html', hosts=hosts_db)
+	from config import ise_username
+	from config import ise_password
+	from app import unnuke_from_space
+	#nukeFromSpace(ise_username, ise_password, mac)
+	print (mac)
+	hosts_db.update({'quarantine': 'False'}, querydb.mac == mac)
+	return render_template('response.html', hosts=hosts_db)
 
 #Process for sending blocked domain to Umbrella
 @app.route('/block/<string:domain_name>', methods=['POST'])
 def block_with_umbrella(domain_name):
-    #blockWithUmbrella(umbrella_key, domain)
-    domain_details = domains_db.search(querydb.domain == domain_name)
-    print (domain_name)
-    return render_template('domain_research.html', domain=domain_details)
+	from app import blockWithUmbrella
+	from app import umbrella_key
+	#blockWithUmbrella(umbrella_key, domain)
+	domain_details = domains_db.search(querydb.domain == domain_name)
+	print (domain_name)
+	return render_template('domain_research.html', domain=domain_details)
 
 @app.route('/research', methods=['GET', 'POST'])
 def research():
@@ -91,11 +95,16 @@ def research_malware(threat_name):
 @app.route('/reports', methods = ['GET', 'POST'])
 def reports():
 	if request.method == 'POST':
+		from app import create_new_webex_teams_incident_room
+		from config import webex_teams_access_token
 		result = request.form
+		incident = {}
 		incident_report = open("Incident Report.txt", "w")
 		for key, value in result.items():
+			incident[key] = value
 			incident_report.write(key + ": " + value + "\r\n")
 		incident_report.close()
+		create_new_webex_teams_incident_room(webex_teams_access_token, incident)
 		return render_template('reports.html')
 
 	if request.method == 'GET':
