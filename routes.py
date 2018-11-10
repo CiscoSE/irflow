@@ -117,7 +117,7 @@ def reports():
 			incident[key] = value
 			incident_report.write(key + ": " + value + "\r\n")
 		incident_report.close()
-		create_new_webex_teams_incident_room(config[webex_teams][token], incident)
+		incident_room = create_new_webex_teams_incident_room(config[webex_teams][token], incident)
 		return render_template('reports.html')
 
 	if request.method == 'GET':

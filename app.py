@@ -53,27 +53,11 @@ app = Flask(__name__)
 wsgi_app = app.wsgi_app
 from routes import *
 
-
-#Import Variables from config.py
-
 with open("config.yml", 'r') as stream:
             try:
                 config = yaml.load(stream)
             except yaml.YAMLError as exc:
                 print(exc)
-
-#from config import amp4e_client_id
-#from config import amp4e_computer
-#from config import amp4e_api_key
-#from config import ise_username
-#from config import ise_password
-#from config import ise_host
-#from config import threatgrid_key
-#from config import threatgrid_host
-#from config import investigate_token
-#from config import umbrella_key
-#from config import umbrella_secret
-#from config import webex_teams_access_token
 
 #Initialize database for storing data locally
 hosts_db = TinyDB('hosts_db.json')
@@ -82,14 +66,13 @@ domains_db = TinyDB('domains_db.json')
 querydb = Query()
 
 def main():
-    #investigateSecurity("bing.com", investigate_token)
-    #investigateDomains("[\"www.bing.com\",\"github.com\",\"www.bing.com\",\"codeload.github.com\",\"7tno4hib47vlep5o.tor2web.fi\"]", investigate_token)
-    #getSamplesFromTG(threatgrid_host,threatgrid_key,"ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa")
     print ('Starting...')
-    #findMalwareEventsFromCTA()
-    #findMalwareEvents(amp4e_client_id, amp4e_api_key)
-    incident_room = create_new_webex_teams_incident_room(config[webex_teams][token])
-    #attach_incident_report(webex_teams_access_token, incident_room)
+    #get_investigate_security_scores("bing.com", config[investigate][key])
+    #get_investigate_domains("[\"www.bing.com\",\"github.com\",\"www.bing.com\",\"codeload.github.com\",\"7tno4hib47vlep5o.tor2web.fi\"]", config[investigate][key])
+    #get_samples_from_threatgrid(config[threatgrid][hostname],config[threatgrid][key],"ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa")
+    #find_malware_events_from_cognitive()
+    #find_malware_events_from_amp(config[amp4e][client_id], config[amp4e][api_key)
+    #incident_room = create_new_webex_teams_incident_room(config[webex_teams][token])
 
 def find_malware_events_from_amp(amp4e_client_id, amp4e_api_key):
     '''
@@ -266,7 +249,7 @@ def get_investigate_domains(domains,investigate_token):
         
         content_cat = []
         security_cat = []
-        scores = investigateSecurity(item,investigate_token)
+        scores = get_investigate_security_scores(item,investigate_token)
         content = (response.json()[item]['content_categories'])
         security = (response.json()[item]['security_categories'])
         for category in content:
@@ -274,7 +257,7 @@ def get_investigate_domains(domains,investigate_token):
         for category in security:
             security_cat.append(investigate_categories[category])
         domains_db.insert({'domain':item,
-                         'domain_score':(investigateDomainScore(item,investigate_token)),
+                         'domain_score':(get_investigate_domain_score(item,investigate_token)),
                          'dga_score':scores[0],
                          'perplexity':scores[1],
                          'securerank2':scores[2],
