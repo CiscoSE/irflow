@@ -17,7 +17,14 @@ def index():
 @app.route('/configure')
 def configure():
 	if request.method == 'GET':
-		return render_template('configure.html')
+		import yaml
+
+		with open("config.yml", 'r') as stream:
+			try:
+				config = yaml.load(stream)
+			except yaml.YAMLError as exc:
+				print(exc)
+		return render_template('configure.html', config=config)
 	else:
 		return "<h2> Invalid Request </h2>"
 

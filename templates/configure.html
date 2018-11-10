@@ -2,69 +2,6 @@
 
 {% block mainpanel %}
 
-<br>
-
-<div class="col-md-6">
-      <div class="ui-steps ui-steps--vertical">
-            <div class="ui-step active">
-                <div class="step__icon">0</div>
-                <div class="step__label">Configure Services and Settings</div>
-            </div>
-      </div>
-</div>
-
-<hr>
-
-For each service you have, enable the service first and then provide the necessary credentials.
-
-<br /> <br />
-
-<div class="row no-gutters">
-    <div class="panel panel--indigo panel--loose">
-        <span class="text-uppercase">Threat Identification</span>
-    </div>
-</div>
-
-<br />
-
-<div class="form-group form-group--loose">
-      <div>Advanced Malware Protection (AMP)</div>
-        <label class="switch switch--small">
-            <input type="checkbox" id="amp" onclick="myFunction()" checked>
-            <span class="switch__input"></span>
-            <span class="switch__label">Enabled</span>
-        </label>
-</div>
-
-<p id="text" style="display:none">
-  
-      <div class="col-md-3">
-        <div class="form-group">
-            <div class="form-group__text">
-                <input id="input-state-default" type="text" value="api.amp.cisco.com">
-                <label for="input-state-default">AMP Host</label>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="form-group">
-            <div class="form-group__text">
-                <input id="input-state-default" type="text" value="">
-                <label for="input-state-default">AMP Client ID</label>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="form-group">
-            <div class="form-group__text">
-                <input id="input-state-default" type="text" value="">
-                <label for="input-state-default">AMP API Key</label>
-            </div>
-        </div>
-    </div>
-</p>
-
 <script>
 $(function() {
   
@@ -107,20 +44,55 @@ $(function() {
 });
 </script>
 
+<br>
 
-    <div class="col-md-3">
+<div class="col-md-6">
+      <div class="ui-steps ui-steps--vertical">
+            <div class="ui-step active">
+                <div class="step__icon">0</div>
+                <div class="step__label">Configure Services and Settings</div>
+            </div>
+      </div>
+</div>
+
+<hr>
+
+For each service you have, enable the service first and then provide the necessary credentials.
+
+<br /> <br />
+
+<div class="row no-gutters">
+    <div class="panel panel--indigo panel--loose">
+        <span class="text-uppercase">Threat Identification</span>
+    </div>
+</div>
+
+<br />
+
+<div class="form-group form-group--loose">
+      <div>Advanced Malware Protection (AMP)</div>
+        <label class="switch switch--small">
+            <input type="checkbox" id="amp" onclick="function()" checked>
+            <span class="switch__input"></span>
+            <span class="switch__label">Enabled</span>
+        </label>
+</div>
+
+<p id="text" style="display:none">
+  
+      <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="api.amp.cisco.com">
-                <label for="input-state-default">AMP Host</label>
+                <input id="amp_host" type="text" value="{{config['amp4e']['hostname']}}">
+                <label for="amp_host">AMP Host</label>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="">
-                <label for="input-state-default">AMP Client ID</label>
+                <input id="amp_client_id" type="text" value="{{config['amp4e']['client_id']}}">
+                <label for="amp_client_id">AMP Client ID</label>
             </div>
         </div>
     </div>
@@ -128,12 +100,12 @@ $(function() {
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="">
-                <label for="input-state-default">AMP API Key</label>
+                <input id="amp_api_key" type="text" value="{{config['amp4e']['api_key']}}">
+                <label for="amp_api_key">AMP API Key</label>
             </div>
         </div>
     </div>
-
+</p>
 
 <div class="form-group form-group--loose">
       <div>Cognitive Intelligence</div>
@@ -147,8 +119,8 @@ $(function() {
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="https://taxii.cloudsec.sco.cisco.com/skym-taxii-ws/PollService">
-                <label for="input-state-default">Cognitive TAXII Service</label>
+                <input id="cognitive_service" type="text" value="{{config['cognitive']['service']}}">
+                <label for="cognitive_service">Cognitive TAXII Service</label>
             </div>
         </div>
     </div>
@@ -156,16 +128,16 @@ $(function() {
       <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="">
-                <label for="input-state-default">Cognitive Username</label>
+                <input id="cognitive_username" type="text" value="{{config['cognitive']['user']}}">
+                <label for="cognitive_username">Cognitive Username</label>
             </div>
         </div>
       </div>
       <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">    
-                <input id="input-type-password" type="password" value="">
-                <label for="input-type-password">Cognitive Password</label>
+                <input id="cognitive_password" type="password" value="{{config['cognitive']['password']}}">
+                <label for="cognitive_password">Cognitive Password</label>
             </div>
         </div>    
       </div>    
@@ -173,11 +145,13 @@ $(function() {
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="">
-                <label for="input-state-default">Cognitive Threat Feed</label>
+                <input id="cognitive_threat_feed" type="text" value="{{config['cognitive']['feed']}}">
+                <label for="cognitive_threat_feed">Cognitive Threat Feed</label>
             </div>
         </div>
     </div>
+
+<br />
 
 <div class="row no-gutters">
     <div class="panel panel--indigo panel--loose">
@@ -199,16 +173,16 @@ $(function() {
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="investigate.api.umbrella.com">
-                <label for="input-state-default">Investigate Host</label>
+                <input id="investigate_host" type="text" value="{{config['investigate']['hostname']}}">
+                <label for="investigate_host">Investigate Host</label>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="">
-                <label for="input-state-default">Investigate Token</label>
+                <input id="investigate_token" type="text" value="{{config['investigate']['key']}}">
+                <label for="investigate_token">Investigate Token</label>
             </div>
         </div>
     </div>
@@ -225,16 +199,16 @@ $(function() {
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="panacea.threatgrid.com">
-                <label for="input-state-default">Threat Grid Host</label>
+                <input id="threat_grid_host" type="text" value="{{config['threatgrid']['hostname']}}">
+                <label for="threat_grid_host">Threat Grid Host</label>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="">
-                <label for="input-state-default">Threat Grid Key</label>
+                <input id="threat_grid_key" type="text" value="{{config['threatgrid']['key']}}">
+                <label for="threat_grid_key">Threat Grid Key</label>
             </div>
         </div>
     </div>
@@ -260,8 +234,8 @@ $(function() {
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="ise.corporate.local">
-                <label for="input-state-default">ISE Host</label>
+                <input id="ise_host" type="text" value="{{config['ise']['hostname']}}">
+                <label for="ise_host">ISE Host</label>
             </div>
         </div>
     </div>
@@ -270,16 +244,16 @@ $(function() {
       <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="">
-                <label for="input-state-default">ISE Username</label>
+                <input id="ise_username" type="text" value="{{config['ise']['user']}}">
+                <label for="ise_username">ISE Username</label>
             </div>
         </div>
       </div>
       <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">    
-                <input id="input-type-password" type="password" value="">
-                <label for="input-type-password">ISE Password</label>
+                <input id="ise_password" type="password" value="{{config['ise']['password']}}">
+                <label for="ise_password">ISE Password</label>
             </div>
         </div>    
       </div>    
@@ -297,16 +271,24 @@ $(function() {
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="s-platform.api.opendns.com">
-                <label for="input-state-default">Umbrella Host</label>
+                <input id="umbrella_host" type="text" value="{{config['umbrella']['hostname']}}">
+                <label for="umbrella_host">Umbrella Host</label>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="input-state-default" type="text" value="">
-                <label for="input-state-default">Umbrella Key</label>
+                <input id="umbrella_key" type="text" value="{{config['umbrella']['key']}}">
+                <label for="umbrella_key">Umbrella Key</label>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <div class="form-group__text">
+                <input id="umbrella_secret" type="text" value="{{config['umbrella']['secret']}}">
+                <label for="umbrella_secret">Umbrella Secret</label>
             </div>
         </div>
     </div>
