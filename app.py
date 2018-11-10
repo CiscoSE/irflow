@@ -10,6 +10,8 @@ Script Dependencies:
     tinydb
     pprint
     flask
+    ciscosparkapi
+    pyyaml
 
 Depencency Installation:
     $ pip install -r requirements.txt
@@ -44,6 +46,7 @@ from tinydb import TinyDB,Query
 from pprint import pprint #import Pretty Print for formated text output
 from flask import Flask  #import web application
 import ciscosparkapi #Webex Teams features for creating rooms
+import yaml #YAML for working with the config.yml
 
 
 app = Flask(__name__)
@@ -52,18 +55,25 @@ from routes import *
 
 
 #Import Variables from config.py
-from config import amp4e_client_id
-from config import amp4e_computer
-from config import amp4e_api_key
-from config import ise_username
-from config import ise_password
-from config import ise_host
-from config import threatgrid_key
-from config import threatgrid_host
-from config import investigate_token
-from config import umbrella_key
-from config import umbrella_secret
-from config import webex_teams_access_token
+
+with open("config.yml", 'r') as stream:
+            try:
+                config = yaml.load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+
+#from config import amp4e_client_id
+#from config import amp4e_computer
+#from config import amp4e_api_key
+#from config import ise_username
+#from config import ise_password
+#from config import ise_host
+#from config import threatgrid_key
+#from config import threatgrid_host
+#from config import investigate_token
+#from config import umbrella_key
+#from config import umbrella_secret
+#from config import webex_teams_access_token
 
 #Initialize database for storing data locally
 hosts_db = TinyDB('hosts_db.json')
@@ -78,10 +88,10 @@ def main():
     print ('Starting...')
     #findMalwareEventsFromCTA()
     #findMalwareEvents(amp4e_client_id, amp4e_api_key)
-    incident_room = create_new_webex_teams_incident_room(webex_teams_access_token)
+    incident_room = create_new_webex_teams_incident_room(config[webex_teams][token])
     #attach_incident_report(webex_teams_access_token, incident_room)
 
-def findMalwareEventsFromAMP(amp4e_client_id, amp4e_api_key):
+def find_malware_events_from_amp(amp4e_client_id, amp4e_api_key):
     '''
     Identifies indications of compromise from AMP for Endpoints.  Itemizes all hosts where AMP identifies malware was successfully executed
     '''
@@ -109,12 +119,12 @@ def findMalwareEventsFromAMP(amp4e_client_id, amp4e_api_key):
                          'quarantined':'false'
                          })
 
-def nukeFromSpace(iseuser, isepassword, mac_address = "66:96:a5:94:76:32"):
+def nuke_from_space(ise_user, ise_password, mac_address = "66:96:a5:94:76:32"):
     '''
     Leverages Adaptive Network Control on ISE to quarantine the devices with malware infection
     '''
 
-    url = "https://" + ise_username + ":" + ise_password + "@" + ise_host + "/ers/config/ancendpoint/apply"
+    url = "https://" + ise_username + ":" + ise_password + "@" + config[ise][hostname] + "/ers/config/ancendpoint/apply"
 
     payload = { "OperationAdditionalData": {
                 "additionalData": [{
@@ -138,12 +148,12 @@ def nukeFromSpace(iseuser, isepassword, mac_address = "66:96:a5:94:76:32"):
     hosts_db.update({'quarantine': 'true'}, querydb.mac == mac_address)
     print(response.text)
 
-def unnukeFromSpace(iseuser, isepassword, mac_address = "66:96:a5:94:76:32"):
+def unnuke_from_space(ise_user, ise_password, mac_address = "66:96:a5:94:76:32"):
     '''
     Leverages Adaptive Network Control on ISE to unquarantine the devices after they have been quarantined.
     '''
 
-    url = "https://" + ise_username + ":" + ise_password + "@" + ise_host + "/ers/config/ancendpoint/clear"
+    url = "https://" + ise_user + ":" + ise_password + "@" + config[ise][hostname] + "/ers/config/ancendpoint/clear"
 
     payload = { "OperationAdditionalData": {
                 "additionalData": [{
@@ -167,12 +177,12 @@ def unnukeFromSpace(iseuser, isepassword, mac_address = "66:96:a5:94:76:32"):
     hosts_db.update({'quarantine': 'false'}, querydb.mac == mac_address)
     print(response.text)
 
-def getSamplesFromTG(threatgrid_host,threatgrid_key,sha256):
+def get_samples_from_threatgrid(threatgrid_hostname,threatgrid_key,sha256):
     '''
     Pull information about the identified malware from ThreatGrid.
     '''
 
-    url = "https://" + threatgrid_host + "/api/v2/search/submissions"
+    url = "https://" + threatgrid_hostname + "/api/v2/search/submissions"
 
     querystring = {"q":sha256,"api_key":threatgrid_key}
 
@@ -200,7 +210,7 @@ def getSamplesFromTG(threatgrid_host,threatgrid_key,sha256):
             magics.append(item['item']['analysis']['metadata']['malware_desc'][0]['magic'])
         threat_score = (item['item']['analysis']['threat_score'])
         for item in samples:
-            collectedSamples = getSampleDomainsFromTG(threatgrid_host,threatgrid_key,item)
+            collectedSamples = get_sample_domains_from_threatgrid(config[threatgrid][hostname],config[threatgrid][key],item)
             for domain in collectedSamples:
                 if domain not in sampleDomains:
                     sampleDomains.append(domain)
@@ -212,11 +222,11 @@ def getSamplesFromTG(threatgrid_host,threatgrid_key,sha256):
                        'domains':sampleDomains
                      })
 
-def getSampleDomainsFromTG(threatgrid_host, threatgrid_key, sample_id):
+def get_sample_domains_from_threatgrid(threatgrid_hostname, threatgrid_key, sample_id):
     '''
     Discovers a list of domains associated with a ThreatGrid Sample ID, obtained from querying the SHA256 hash.
     '''
-    url = "https://" + threatgrid_host + "/api/v2/samples/feeds/domains"
+    url = "https://" + threatgrid_hostname + "/api/v2/samples/feeds/domains"
 
     querystring = {"sample":sample_id,"after":"2018-02-01","api_key":threatgrid_key}
 
@@ -234,7 +244,7 @@ def getSampleDomainsFromTG(threatgrid_host, threatgrid_key, sample_id):
         sampleDomains.append(item['domain'])
     return (sampleDomains)
 
-def investigateDomains(domains,investigate_token):
+def get_investigate_domains(domains,investigate_token):
     '''
     Gathers information about the domains associated with the indications of compromise discovered from Threat Grid.  This function returns the Content Category, Security Catogories, Risk Score (via investigateDomainScore(), and several other security metrics.  These are put into our "investigation" database.
     '''
@@ -279,7 +289,7 @@ def investigateDomains(domains,investigate_token):
                          'security':security_cat
                          })
 
-def investigateDomainScore(domain,investigate_token):
+def get_investigate_domain_score(domain,investigate_token):
     '''
     Takes a domain name and returns its Risk Score from Umbrella Investigate.
     '''
@@ -296,7 +306,7 @@ def investigateDomainScore(domain,investigate_token):
 
     return (response.json()['risk_score'])
 
-def investigateSecurity(domain, investigate_token):
+def get_investigate_security_scores(domain, investigate_token):
 
     url = "https://investigate.api.umbrella.com/security/name/" + domain
 
@@ -323,7 +333,7 @@ def investigateSecurity(domain, investigate_token):
 
     return(scores)
 
-def findMalwareEventsFromCTA():
+def find_malware_events_from_cognitive():
 
     import requests
 
@@ -343,7 +353,7 @@ def findMalwareEventsFromCTA():
 
     print(response.text)
 
-def blockWithUmbrella(domain,umbrella_key):
+def block_with_umbrella(domain,umbrella_key):
     import requests
 
     url = "https://s-platform.api.opendns.com/1.0/events"
