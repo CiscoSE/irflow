@@ -37,9 +37,6 @@ def configure():
 			yaml.dump(new_config, outfile, default_flow_style=False)
 
 		return render_template('configure.html', config=new_config)
-
-
-
 	else:
 		return "<h2> Invalid Request </h2>"
 
@@ -125,5 +122,16 @@ def reports():
 
 	if request.method == 'GET':
 		return render_template('reports.html')
+	else:
+		return "<h2> Invalid Request </h2>"
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+	if request.method == 'GET':
+		return render_template('search.html', hosts=hosts_db)
+	if request.method == 'POST':
+		search_term = request.form.get('search_term')
+		print(search_term)
+		return render_template('search.html', search_term=search_term)
 	else:
 		return "<h2> Invalid Request </h2>"

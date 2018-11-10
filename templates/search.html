@@ -1,0 +1,26 @@
+{% extends 'base_layout.html' %}
+{% set active_sidebar = "threats" %}
+
+{% block mainpanel %}
+
+<form action = "http://localhost:5555/search" method = "POST">
+
+
+<div class="form-group label--inline">
+	<div class="form-group__text">
+		<input id="search" name="search_term" type="text">
+		<label for="input-size-default">Search</label>
+	</div>
+</div>
+
+<p><input type = "submit" value = "submit" /></p>
+</form>
+
+<br />
+
+{{ search_term }}
+
+{% endblock %}
+
+<!-- disable footer for this page  -->
+{% block footer %}{% endblock %}
