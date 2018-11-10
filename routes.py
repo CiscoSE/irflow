@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template
 import jinja2
+import yaml
 
 from app import app
 from app import hosts_db
@@ -14,17 +15,31 @@ def index():
 	else:
 		return "<h2> Invalid Request </h2>"
 
-@app.route('/configure')
+@app.route('/configure', methods=['GET', 'POST'])
 def configure():
 	if request.method == 'GET':
-		import yaml
 
 		with open("config.yml", 'r') as stream:
 			try:
 				config = yaml.load(stream)
 			except yaml.YAMLError as exc:
 				print(exc)
+
 		return render_template('configure.html', config=config)
+	if request.method == 'POST':
+		#import yaml
+
+		result = request.form
+
+		new_config = {'fmc': {'hostname': result['fmc_hostname'], 'user': result['fmc_user'], 'password': result['fmc_password']}, 'amp4e': {'hostname': result['amp4e_hostname'], 'client_id': result['amp4e_client_id'], 'api_key': result['amp4e_api_key']}, 'ise': {'hostname': result['ise_hostname'], 'user': result['ise_user'], 'password': result['ise_password']}, 'umbrella': {'hostname': result['umbrella_hostname'], 'key': result['umbrella_key'], 'secret': result['umbrella_secret']}, 'investigate': {'hostname': result['investigate_hostname'], 'key': result['investigate_key']}, 'threatgrid': {'hostname': result['threatgrid_hostname'], 'key': result['threatgrid_key']}, 'cognitive': {'service': result['cognitive_service'], 'user': result['cognitive_user'], 'password': result['cognitive_password'], 'feed': result['cognitive_feed']}, 'webex_teams': {'token': result['webex_teams_token']}}
+
+		with open("config.yml", 'w') as outfile:
+			yaml.dump(new_config, outfile, default_flow_style=False)
+
+		return render_template('configure.html', config=new_config)
+
+
+
 	else:
 		return "<h2> Invalid Request </h2>"
 
@@ -45,10 +60,8 @@ def response():
 #Process for sending Quarantined MAC to ISE
 @app.route('/nuke_from_space/<string:mac>', methods=['POST'])
 def nuke_from_space(mac):
-	from config import ise_username
-	from config import ise_password
 	from app import nukeFromSpace
-	#nukeFromSpace(ise_username, ise_password, mac
+	#nukeFromSpace(config[ise][user], config[ise][password], mac
 	print (mac)
 	hosts_db.update({'quarantine': 'True'}, querydb.mac == mac)
 	return render_template('response.html', hosts=hosts_db)
@@ -56,10 +69,8 @@ def nuke_from_space(mac):
 #Process for removing Quarantined MAC to ISE
 @app.route('/unnuke_from_space/<string:mac>', methods=['POST'])
 def unnuke_from_space(mac):
-	from config import ise_username
-	from config import ise_password
 	from app import unnuke_from_space
-	#nukeFromSpace(ise_username, ise_password, mac)
+	#nukeFromSpace(config[ise][user], config[ise][password], mac)
 	print (mac)
 	hosts_db.update({'quarantine': 'False'}, querydb.mac == mac)
 	return render_template('response.html', hosts=hosts_db)
@@ -68,8 +79,7 @@ def unnuke_from_space(mac):
 @app.route('/block/<string:domain_name>', methods=['POST'])
 def block_with_umbrella(domain_name):
 	from app import blockWithUmbrella
-	from app import umbrella_key
-	#blockWithUmbrella(umbrella_key, domain)
+	#blockWithUmbrella(config[umbrella][key], domain)
 	domain_details = domains_db.search(querydb.domain == domain_name)
 	print (domain_name)
 	return render_template('domain_research.html', domain=domain_details)
@@ -103,7 +113,6 @@ def research_malware(threat_name):
 def reports():
 	if request.method == 'POST':
 		from app import create_new_webex_teams_incident_room
-		from config import webex_teams_access_token
 		result = request.form
 		incident = {}
 		incident_report = open("Incident Report.txt", "w")
@@ -111,7 +120,7 @@ def reports():
 			incident[key] = value
 			incident_report.write(key + ": " + value + "\r\n")
 		incident_report.close()
-		create_new_webex_teams_incident_room(webex_teams_access_token, incident)
+		create_new_webex_teams_incident_room(config[webex_teams][token], incident)
 		return render_template('reports.html')
 
 	if request.method == 'GET':

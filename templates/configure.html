@@ -44,6 +44,8 @@ $(function() {
 });
 </script>
 
+<form action = "http://localhost:5555/configure" method = "POST">
+
 <br>
 
 <div class="col-md-6">
@@ -83,16 +85,16 @@ For each service you have, enable the service first and then provide the necessa
       <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="amp_host" type="text" value="{{config['amp4e']['hostname']}}">
-                <label for="amp_host">AMP Host</label>
+                <input id= "amp4e_hostname" name="amp4e_hostname" type="text" value="{{config['amp4e']['hostname']}}">
+                <label for="amp4e_hostname">AMP Host</label>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="amp_client_id" type="text" value="{{config['amp4e']['client_id']}}">
-                <label for="amp_client_id">AMP Client ID</label>
+                <input id="amp4e_client_id" name="amp4e_client_id" type="text" value="{{config['amp4e']['client_id']}}">
+                <label for="amp4e_client_id">AMP Client ID</label>
             </div>
         </div>
     </div>
@@ -100,8 +102,8 @@ For each service you have, enable the service first and then provide the necessa
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="amp_api_key" type="text" value="{{config['amp4e']['api_key']}}">
-                <label for="amp_api_key">AMP API Key</label>
+                <input id="amp4e_api_key" name="amp4e_api_key" type="text" value="{{config['amp4e']['api_key']}}">
+                <label for="amp4e_api_key">AMP API Key</label>
             </div>
         </div>
     </div>
@@ -119,7 +121,7 @@ For each service you have, enable the service first and then provide the necessa
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="cognitive_service" type="text" value="{{config['cognitive']['service']}}">
+                <input id="cognitive_service" name="cognitive_service" type="text" value="{{config['cognitive']['service']}}">
                 <label for="cognitive_service">Cognitive TAXII Service</label>
             </div>
         </div>
@@ -128,15 +130,15 @@ For each service you have, enable the service first and then provide the necessa
       <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="cognitive_username" type="text" value="{{config['cognitive']['user']}}">
-                <label for="cognitive_username">Cognitive Username</label>
+                <input id="cognitive_user" name="cognitive_user" type="text" value="{{config['cognitive']['user']}}">
+                <label for="cognitive_user">Cognitive Username</label>
             </div>
         </div>
       </div>
       <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">    
-                <input id="cognitive_password" type="password" value="{{config['cognitive']['password']}}">
+                <input id="cognitive_password" name="cognitive_password" type="password" value="{{config['cognitive']['password']}}">
                 <label for="cognitive_password">Cognitive Password</label>
             </div>
         </div>    
@@ -145,13 +147,13 @@ For each service you have, enable the service first and then provide the necessa
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="cognitive_threat_feed" type="text" value="{{config['cognitive']['feed']}}">
-                <label for="cognitive_threat_feed">Cognitive Threat Feed</label>
+                <input id="cognitive_feed" name="cognitive_feed" type="text" value="{{config['cognitive']['feed']}}">
+                <label for="cognitive_feed">Cognitive Threat Feed</label>
             </div>
         </div>
     </div>
 
-<br />
+<br /> <br />
 
 <div class="row no-gutters">
     <div class="panel panel--indigo panel--loose">
@@ -173,16 +175,16 @@ For each service you have, enable the service first and then provide the necessa
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="investigate_host" type="text" value="{{config['investigate']['hostname']}}">
-                <label for="investigate_host">Investigate Host</label>
+                <input id="investigate_hostname" name="investigate_hostname" type="text" value="{{config['investigate']['hostname']}}">
+                <label for="investigate_hostname">Investigate Host</label>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="investigate_token" type="text" value="{{config['investigate']['key']}}">
-                <label for="investigate_token">Investigate Token</label>
+                <input id="investigate_key" name="investigate_key" type="text" value="{{config['investigate']['key']}}">
+                <label for="investigate_key">Investigate Token</label>
             </div>
         </div>
     </div>
@@ -199,16 +201,16 @@ For each service you have, enable the service first and then provide the necessa
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="threat_grid_host" type="text" value="{{config['threatgrid']['hostname']}}">
-                <label for="threat_grid_host">Threat Grid Host</label>
+                <input id="threatgrid_hostname" name="threatgrid_hostname" type="text" value="{{config['threatgrid']['hostname']}}">
+                <label for="threatgrid_hostname">Threat Grid Host</label>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="threat_grid_key" type="text" value="{{config['threatgrid']['key']}}">
-                <label for="threat_grid_key">Threat Grid Key</label>
+                <input id="threatgrid_key" name="threatgrid_key" type="text" value="{{config['threatgrid']['key']}}">
+                <label for="threatgrid_key">Threat Grid Key</label>
             </div>
         </div>
     </div>
@@ -234,8 +236,8 @@ For each service you have, enable the service first and then provide the necessa
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="ise_host" type="text" value="{{config['ise']['hostname']}}">
-                <label for="ise_host">ISE Host</label>
+                <input id="ise_hostname" name="ise_hostname" type="text" value="{{config['ise']['hostname']}}">
+                <label for="ise_hostname">ISE Host</label>
             </div>
         </div>
     </div>
@@ -244,15 +246,15 @@ For each service you have, enable the service first and then provide the necessa
       <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="ise_username" type="text" value="{{config['ise']['user']}}">
-                <label for="ise_username">ISE Username</label>
+                <input id="ise_user"  name="ise_user" type="text" value="{{config['ise']['user']}}">
+                <label for="ise_user">ISE Username</label>
             </div>
         </div>
       </div>
       <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">    
-                <input id="ise_password" type="password" value="{{config['ise']['password']}}">
+                <input id="ise_password" name="ise_password" type="password" value="{{config['ise']['password']}}">
                 <label for="ise_password">ISE Password</label>
             </div>
         </div>    
@@ -271,15 +273,15 @@ For each service you have, enable the service first and then provide the necessa
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="umbrella_host" type="text" value="{{config['umbrella']['hostname']}}">
-                <label for="umbrella_host">Umbrella Host</label>
+                <input id="umbrella_hostname" name="umbrella_hostname" type="text" value="{{config['umbrella']['hostname']}}">
+                <label for="umbrella_hostname">Umbrella Host</label>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="umbrella_key" type="text" value="{{config['umbrella']['key']}}">
+                <input id="umbrella_key" name="umbrella_key" type="text" value="{{config['umbrella']['key']}}">
                 <label for="umbrella_key">Umbrella Key</label>
             </div>
         </div>
@@ -287,7 +289,7 @@ For each service you have, enable the service first and then provide the necessa
     <div class="col-md-3">
         <div class="form-group">
             <div class="form-group__text">
-                <input id="umbrella_secret" type="text" value="{{config['umbrella']['secret']}}">
+                <input id="umbrella_secret" name="umbrella_secret" type="text" value="{{config['umbrella']['secret']}}">
                 <label for="umbrella_secret">Umbrella Secret</label>
             </div>
         </div>
@@ -301,6 +303,53 @@ For each service you have, enable the service first and then provide the necessa
             <span class="switch__label">Enabled</span>
         </label>
 </div>
+
+    <div class="col-md-3">
+        <div class="form-group">
+            <div class="form-group__text">
+                <input id="fmc_hostname" name="fmc_hostname" type="text" value="{{config['fmc']['hostname']}}">
+                <label for="fmc_hostname">Firepower Host</label>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <div class="form-group__text">
+                <input id="fmc_user" name="fmc_user" type="text" value="{{config['fmc']['user']}}">
+                <label for="fmc_user">Firepower Username</label>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <div class="form-group__text">
+                <input id="fmc_password" name="fmc_password" type="text" value="{{config['fmc']['password']}}">
+                <label for="fmc_password">Firepower Password</label>
+            </div>
+        </div>
+    </div>
+
+<br /> <br />
+
+<div class="row no-gutters">
+    <div class="panel panel--indigo panel--loose">
+        <span class="text-uppercase">Communications</span>
+    </div>
+</div>
+
+<br />
+
+    <div class="col-md-3">
+        <div class="form-group">
+            <div class="form-group__text">
+                <input id="webex_teams_token" name="webex_teams_token" type="text" value="{{config['webex_teams']['token']}}">
+                <label for="webex_teams_token">Webex Teams Token</label>
+            </div>
+        </div>
+    </div>
+
+<p><input type = "submit" value = "submit" /></p>
+</form>
 
 {% endblock %}
 
