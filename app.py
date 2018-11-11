@@ -34,7 +34,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import requests # import requests library
+# import requests library
+import requests
 try:
     requests.packages.urllib3.disable_warnings()
 except:
@@ -42,24 +43,25 @@ except:
 
 import datetime #import datetime for ISO 8601 timestamps
 import getpass  #import getpass to mask password entries
-from tinydb import TinyDB,Query
+from tinydb import TinyDB,Query #import database for storing results locally.
 from pprint import pprint #import Pretty Print for formated text output
 from flask import Flask  #import web application
 import ciscosparkapi #Webex Teams features for creating rooms
 import yaml #YAML for working with the config.yml
 
-
+#Initialize Flask and import routes from routes.py
 app = Flask(__name__)
 wsgi_app = app.wsgi_app
 from routes import *
 
+#Open the config.yml file to retreive configuration details
 with open("config.yml", 'r') as stream:
-            try:
-                config = yaml.load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
+    try:
+        config = yaml.load(stream)
+    except yaml.YAMLError as exc:
+        print(exc)
 
-#Initialize database for storing data locally
+#Initialize databases for storing data locally
 hosts_db = TinyDB('hosts_db.json')
 threats_db = TinyDB('threats_db.json')
 domains_db = TinyDB('domains_db.json')
@@ -67,12 +69,12 @@ querydb = Query()
 
 def main():
     print ('Starting...')
-    #get_investigate_security_scores("bing.com", config[investigate][key])
-    #get_investigate_domains("[\"www.bing.com\",\"github.com\",\"www.bing.com\",\"codeload.github.com\",\"7tno4hib47vlep5o.tor2web.fi\"]", config[investigate][key])
-    #get_samples_from_threatgrid(config[threatgrid][hostname],config[threatgrid][key],"ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa")
+    #get_investigate_security_scores("bing.com", config['investigate']['key'])
+    #get_investigate_domains("[\"www.bing.com\",\"github.com\",\"www.bing.com\",\"codeload.github.com\",\"7tno4hib47vlep5o.tor2web.fi\"]", config['investigate']['key'])
+    #get_samples_from_threatgrid(config['threatgrid']['hostname'],config['threatgrid']['key'],"ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa")
     #find_malware_events_from_cognitive()
-    #find_malware_events_from_amp(config[amp4e][client_id], config[amp4e][api_key)
-    #incident_room = create_new_webex_teams_incident_room(config[webex_teams][token])
+    #find_malware_events_from_amp(config['amp4e']['client_id'], config['amp4e']['api_key'])
+    #incident_room = create_new_webex_teams_incident_room(config['webex_teams']['token'])
 
 def find_malware_events_from_amp(amp4e_client_id, amp4e_api_key):
     '''
@@ -86,13 +88,14 @@ def find_malware_events_from_amp(amp4e_client_id, amp4e_api_key):
     'Cache-Control': "no-cache",
     }
 
-    #print(hosts_db.search(hosts_db_query.hostname == 'host1'))
-
     response = requests.request("GET", url, headers=headers, params=querystring)
 
     for item in response.json()['data']:
 
-        hosts_db.insert({'date':item['date'],
+        #Check to see if the host is in the database or not.  If not add it.
+        if bool(hosts_db.get(querydb.hostname == item['computer']['hostname'])) == False:
+
+            hosts_db.insert({'date':item['date'],
                          'hostname':item['computer']['hostname'],
                          'ip':((item['computer']['network_addresses'])[0]['ip']),
                          'mac':((item['computer']['network_addresses'])[0]['mac']),
@@ -107,7 +110,7 @@ def nuke_from_space(ise_user, ise_password, mac_address = "66:96:a5:94:76:32"):
     Leverages Adaptive Network Control on ISE to quarantine the devices with malware infection
     '''
 
-    url = "https://" + ise_username + ":" + ise_password + "@" + config[ise][hostname] + "/ers/config/ancendpoint/apply"
+    url = "https://" + ise_username + ":" + ise_password + "@" + config['ise']['hostname'] + "/ers/config/ancendpoint/apply"
 
     payload = { "OperationAdditionalData": {
                 "additionalData": [{
@@ -136,7 +139,7 @@ def unnuke_from_space(ise_user, ise_password, mac_address = "66:96:a5:94:76:32")
     Leverages Adaptive Network Control on ISE to unquarantine the devices after they have been quarantined.
     '''
 
-    url = "https://" + ise_user + ":" + ise_password + "@" + config[ise][hostname] + "/ers/config/ancendpoint/clear"
+    url = "https://" + ise_user + ":" + ise_password + "@" + config['ise']['hostname'] + "/ers/config/ancendpoint/clear"
 
     payload = { "OperationAdditionalData": {
                 "additionalData": [{
@@ -193,7 +196,7 @@ def get_samples_from_threatgrid(threatgrid_hostname,threatgrid_key,sha256):
             magics.append(item['item']['analysis']['metadata']['malware_desc'][0]['magic'])
         threat_score = (item['item']['analysis']['threat_score'])
         for item in samples:
-            collectedSamples = get_sample_domains_from_threatgrid(config[threatgrid][hostname],config[threatgrid][key],item)
+            collectedSamples = get_sample_domains_from_threatgrid(config['threatgrid']['hostname'],config['threatgrid']['key'],item)
             for domain in collectedSamples:
                 if domain not in sampleDomains:
                     sampleDomains.append(domain)
@@ -318,8 +321,6 @@ def get_investigate_security_scores(domain, investigate_token):
 
 def find_malware_events_from_cognitive():
 
-    import requests
-
     url = "https://taxii.cloudsec.sco.cisco.com/skym-taxii-ws/PollService/"
 
     payload = "<taxii_11:Poll_Request \n    xmlns:taxii_11=\"http://taxii.mitre.org/messages/taxii_xml_binding-1.1\"\n    message_id=\"96485\"\n    collection_name=\"WEBFLOWS_CTA6551672149651114470_V3\">\n    <taxii_11:Exclusive_Begin_Timestamp>2018-09-01T00:00:00Z</taxii_11:Exclusive_Begin_Timestamp>\n    <taxii_11:Inclusive_End_Timestamp>2018-09-30T12:00:00Z</taxii_11:Inclusive_End_Timestamp>\n    <taxii_11:Poll_Parameters allow_asynch=\"false\">\n        <taxii_11:Response_Type>FULL</taxii_11:Response_Type>\n    </taxii_11:Poll_Parameters>\n</taxii_11:Poll_Request>"
@@ -337,7 +338,6 @@ def find_malware_events_from_cognitive():
     print(response.text)
 
 def block_with_umbrella(domain,umbrella_key):
-    import requests
 
     url = "https://s-platform.api.opendns.com/1.0/events"
 
