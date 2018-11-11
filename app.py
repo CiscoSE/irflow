@@ -115,7 +115,7 @@ def find_malware_events_from_amp(amp4e_client_id, amp4e_api_key):
         #If the SHA is not in the threats_db, run it through Threatgrid to collect details about it.
         for sha in sha256s:
             if bool(threats_db.get(querydb.sha256 == sha)) == False:
-            get_samples_from_threatgrid(config['threatgrid']['hostname'],config['threatgrid']['key'],sha)
+                get_samples_from_threatgrid(config['threatgrid']['hostname'],config['threatgrid']['key'],sha)
 
 def nuke_from_space(ise_user, ise_password, mac_address = "66:96:a5:94:76:32"):
     '''
