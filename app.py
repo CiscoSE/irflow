@@ -109,7 +109,7 @@ def find_malware_events_from_amp(amp4e_client_id, amp4e_api_key):
                          'detection':item['detection'],
                          'disposition':item['file']['disposition'],
                          'file':(item['file']['identity']['sha256']),
-                         'quarantined':'false'
+                         'quarantine':'False'
                          })
         
         #If the SHA is not in the threats_db, run it through Threatgrid to collect details about it.
