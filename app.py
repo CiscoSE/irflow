@@ -90,7 +90,14 @@ def find_malware_events_from_amp(amp4e_client_id, amp4e_api_key):
 
     response = requests.request("GET", url, headers=headers, params=querystring)
 
+    #Create a list of the SHA256s
+    sha256s = []
+
     for item in response.json()['data']:
+
+        #Add unique SHA256s to a list to send to Threatgrid
+        if item['file']['identity']['sha256'] not in sha256s:
+            sha256s.append(item['file']['identity']['sha256'])
 
         #Check to see if the host is in the database or not.  If not add it.
         if bool(hosts_db.get(querydb.hostname == item['computer']['hostname'])) == False:
@@ -104,6 +111,11 @@ def find_malware_events_from_amp(amp4e_client_id, amp4e_api_key):
                          'file':(item['file']['identity']['sha256']),
                          'quarantined':'false'
                          })
+        
+        #If the SHA is not in the threats_db, run it through Threatgrid to collect details about it.
+        for sha in sha256s:
+            if bool(threats_db.get(querydb.sha256 == sha)) == False:
+            get_samples_from_threatgrid(config['threatgrid']['hostname'],config['threatgrid']['key'],sha)
 
 def nuke_from_space(ise_user, ise_password, mac_address = "66:96:a5:94:76:32"):
     '''
