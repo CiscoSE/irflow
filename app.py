@@ -117,63 +117,41 @@ def find_malware_events_from_amp(amp4e_client_id, amp4e_api_key):
             if bool(threats_db.get(querydb.sha256 == sha)) == False:
                 get_samples_from_threatgrid(config['threatgrid']['hostname'],config['threatgrid']['key'],sha)
 
-def nuke_from_space(ise_user, ise_password, mac_address = "66:96:a5:94:76:32"):
+def quarantine_with_ise(ise_username, ise_password, mac_address = "66:96:a5:94:76:32"):
     '''
     Leverages Adaptive Network Control on ISE to quarantine the devices with malware infection
     '''
 
-    url = "https://" + ise_username + ":" + ise_password + "@" + config['ise']['hostname'] + "/ers/config/ancendpoint/apply"
+    url = "https://%(ise_username)s:%(ise_password)s@%(ise_host)s/ers/config/ancendpoint/apply" % {'ise_username': ise_username, 'ise_password': ise_password, 'ise_hostname': config['ise']['hostname']}
 
-    payload = { "OperationAdditionalData": {
-                "additionalData": [{
-                "name": "macAddress",
-                "value": mac_address
-               },
-               {
-                "name": "policyName",
-                 "value": "ANC-KickFromNetwork"
-                }]
-               }
-               }
+     payload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ns0:operationAdditionalData xmlns:ns0=\"ers.ise.cisco.com\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n   <requestAdditionalAttributes>\n      <additionalAttribute name=\"macAddress\" value=\"%(mac)s\"/>\n      <additionalAttribute name=\"policyName\" value=\"KickFromNetwork\"/>\n   </requestAdditionalAttributes>\n</ns0:operationAdditionalData>" % {'mac': mac_address}
+
     headers = {
-    'Content-Type': "application/json",
-    'Accept': "application/json",
-    'Cache-Control': "no-cache"
+    'content-type': "application/xml",
+    'accept': "application/json"
     }
 
-    response = requests.request("PUT", url, data=payload, headers=headers)
+    response = requests.request("PUT", url, data=payload, headers=headers, verify=False)
 
-    hosts_db.update({'quarantine': 'true'}, querydb.mac == mac_address)
-    print(response.text)
+    hosts_db.update({'quarantine': 'True'}, querydb.mac == mac_address)
 
-def unnuke_from_space(ise_user, ise_password, mac_address = "66:96:a5:94:76:32"):
+def unquarantine_with_ise(ise_username, ise_password, mac_address):
     '''
     Leverages Adaptive Network Control on ISE to unquarantine the devices after they have been quarantined.
     '''
 
-    url = "https://" + ise_user + ":" + ise_password + "@" + config['ise']['hostname'] + "/ers/config/ancendpoint/clear"
+    url = "https://%(ise_username)s:%(ise_password)s@%(ise_host)s/ers/config/ancendpoint/clear" % {'ise_username': ise_username, 'ise_password': ise_password, 'ise_hostname': config['ise']['hostname']}
 
-    payload = { "OperationAdditionalData": {
-                "additionalData": [{
-                "name": "macAddress",
-                "value": mac_address
-               },
-               {
-                "name": "policyName",
-                 "value": "ANC-KickFromNetwork"
-                }]
-               }
-               }
+    payload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ns0:operationAdditionalData xmlns:ns0=\"ers.ise.cisco.com\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n   <requestAdditionalAttributes>\n      <additionalAttribute name=\"macAddress\" value=\"%(mac)s\"/>\n      <additionalAttribute name=\"policyName\" value=\"KickFromNetwork\"/>\n   </requestAdditionalAttributes>\n</ns0:operationAdditionalData>" % {'mac': mac_address}
+
     headers = {
-    'Content-Type': "application/json",
-    'Accept': "application/json",
-    'Cache-Control': "no-cache"
+    'content-type': "application/xml",
+    'accept': "application/json"
     }
 
-    response = requests.request("PUT", url, data=payload, headers=headers)
+    response = requests.request("PUT", url, data=payload, headers=headers, verify=False)
 
-    hosts_db.update({'quarantine': 'false'}, querydb.mac == mac_address)
-    print(response.text)
+    hosts_db.update({'quarantine': 'False'}, querydb.mac == mac_address)
 
 def get_samples_from_threatgrid(threatgrid_hostname,threatgrid_key,sha256):
     '''

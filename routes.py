@@ -27,7 +27,6 @@ def configure():
 
 		return render_template('configure.html', config=config)
 	if request.method == 'POST':
-		#import yaml
 
 		result = request.form
 
@@ -57,8 +56,8 @@ def response():
 #Process for sending Quarantined MAC to ISE
 @app.route('/nuke_from_space/<string:mac>', methods=['POST'])
 def nuke_from_space(mac):
-	from app import nukeFromSpace
-	#nukeFromSpace(config[ise][user], config[ise][password], mac
+	from app import quarantine_with_ise
+	#quarantine_with_ise(config['ise']['user'], config['ise']['password'], mac)
 	print (mac)
 	hosts_db.update({'quarantine': 'True'}, querydb.mac == mac)
 	return render_template('response.html', hosts=hosts_db)
@@ -66,8 +65,8 @@ def nuke_from_space(mac):
 #Process for removing Quarantined MAC to ISE
 @app.route('/unnuke_from_space/<string:mac>', methods=['POST'])
 def unnuke_from_space(mac):
-	from app import unnuke_from_space
-	#nukeFromSpace(config[ise][user], config[ise][password], mac)
+	from app import unquarantine_with_ise
+	#unquarantine_with_ise(config['ise']['user'], config['ise']['password'], mac)
 	print (mac)
 	hosts_db.update({'quarantine': 'False'}, querydb.mac == mac)
 	return render_template('response.html', hosts=hosts_db)
