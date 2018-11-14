@@ -77,11 +77,11 @@ def main():
     #incident_room = create_new_webex_teams_incident_room()
 
 def find_malware_events_from_amp():
-    '''
+    """
     Identifies indications of compromise from AMP for Endpoints.  Itemizes all hosts where AMP identifies malware was successfully executed
-    '''
+    """
 
-    url = "https://%(client)s:%(key)s@api.amp.cisco.com/v1/events" % {'client':config['amp4e']['client_id'], 'key': config['amp4e']['api_key']}
+    url = "https://%(client)s:%(key)s@api.amp.cisco.com/v1/events" % {'client':config['amp4e']['client_id'], 'key':config['amp4e']['api_key']}
 
     querystring = {"event_type[]":"1107296272"}
 
@@ -118,14 +118,35 @@ def find_malware_events_from_amp():
             if bool(threats_db.get(querydb.sha256 == sha)) == False:
                 get_samples_from_threatgrid(sha)
 
+def find_malware_events_from_cognitive():
+    '''
+    TAXII Client to pull indications of compromise from Cognitive Intelligence
+    '''
+
+    url = "https://taxii.cloudsec.sco.cisco.com/skym-taxii-ws/PollService/"
+
+    payload = "<taxii_11:Poll_Request \n    xmlns:taxii_11=\"http://taxii.mitre.org/messages/taxii_xml_binding-1.1\"\n    message_id=\"96485\"\n    collection_name=\"%(flows)s\">\n    <taxii_11:Exclusive_Begin_Timestamp>2018-09-01T00:00:00Z</taxii_11:Exclusive_Begin_Timestamp>\n    <taxii_11:Inclusive_End_Timestamp>2018-09-30T12:00:00Z</taxii_11:Inclusive_End_Timestamp>\n    <taxii_11:Poll_Parameters allow_asynch=\"false\">\n        <taxii_11:Response_Type>FULL</taxii_11:Response_Type>\n    </taxii_11:Poll_Parameters>\n</taxii_11:Poll_Request>" % {flows:config['cognitive']['flows']}
+    headers = {
+    'X-TAXII-Content-Type': "urn:taxii.mitre.org:protocol:http:1.0",
+    'X-TAXII-Services': "urn:taxii.mitre.org:services:1.1",
+    'X-TAXII-Protocol': "urn:taxii.mitre.org:message:xml:1.1",
+    'Content-Type': "application/xml; charset=UTF-8",
+    'Authorization': "Basic " + config['cognitive']['base64'],
+    'Cache-Control': "no-cache",
+    }
+
+    response = requests.request("POST", url, data=payload, headers=headers)
+
+    print(response.text)
+
 def quarantine_with_ise(mac_address):
-    '''
+    """
     Leverages Adaptive Network Control on ISE to quarantine the devices with malware infection
-    '''
+    """
 
     url = "https://%(ise_username)s:%(ise_password)s@%(ise_hostname)s/ers/config/ancendpoint/apply" % {'ise_username':config['ise']['user'], 'ise_password':config['ise']['password'], 'ise_hostname':config['ise']['hostname']}
 
-     payload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ns0:operationAdditionalData xmlns:ns0=\"ers.ise.cisco.com\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n   <requestAdditionalAttributes>\n      <additionalAttribute name=\"macAddress\" value=\"%(mac)s\"/>\n      <additionalAttribute name=\"policyName\" value=\"KickFromNetwork\"/>\n   </requestAdditionalAttributes>\n</ns0:operationAdditionalData>" % {'mac': mac_address}
+     payload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ns0:operationAdditionalData xmlns:ns0=\"ers.ise.cisco.com\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n   <requestAdditionalAttributes>\n      <additionalAttribute name=\"macAddress\" value=\"%(mac)s\"/>\n      <additionalAttribute name=\"policyName\" value=\"KickFromNetwork\"/>\n   </requestAdditionalAttributes>\n</ns0:operationAdditionalData>" % {'mac':mac_address}
 
     headers = {
     'content-type': "application/xml",
@@ -137,13 +158,13 @@ def quarantine_with_ise(mac_address):
     hosts_db.update({'quarantine': 'True'}, querydb.mac == mac_address)
 
 def unquarantine_with_ise(mac_address):
-    '''
+    """
     Leverages Adaptive Network Control on ISE to unquarantine the devices after they have been quarantined.
-    '''
+    """
 
     url = "https://%(ise_username)s:%(ise_password)s@%(ise_hostname)s/ers/config/ancendpoint/clear" % {'ise_username':config['ise']['user'], 'ise_password':config['ise']['password'], 'ise_hostname':config['ise']['hostname']}
 
-    payload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ns0:operationAdditionalData xmlns:ns0=\"ers.ise.cisco.com\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n   <requestAdditionalAttributes>\n      <additionalAttribute name=\"macAddress\" value=\"%(mac)s\"/>\n      <additionalAttribute name=\"policyName\" value=\"KickFromNetwork\"/>\n   </requestAdditionalAttributes>\n</ns0:operationAdditionalData>" % {'mac': mac_address}
+    payload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ns0:operationAdditionalData xmlns:ns0=\"ers.ise.cisco.com\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n   <requestAdditionalAttributes>\n      <additionalAttribute name=\"macAddress\" value=\"%(mac)s\"/>\n      <additionalAttribute name=\"policyName\" value=\"KickFromNetwork\"/>\n   </requestAdditionalAttributes>\n</ns0:operationAdditionalData>" % {'mac':mac_address}
 
     headers = {
     'content-type': "application/xml",
@@ -221,69 +242,6 @@ def get_sample_domains_from_threatgrid(sample_id):
         sampleDomains.append(item['domain'])
     return (sampleDomains)
 
-def get_investigate_domains(domains):
-    '''
-    Gathers information about the domains associated with the indications of compromise discovered from Threat Grid.  This function returns the Content Category, Security Catogories, Risk Score (via investigateDomainScore(), and several other security metrics.  These are put into our "investigation" database.
-    '''
-    
-    investigate_categories = { "0": "Adware", "1": "Alcohol", "2": "Auctions", "3": "Blogs", "4": "Chat", "5": "Classifieds", "6": "Dating", "7": "Drugs", "8": "Ecommerce/Shopping", "9": "File Storage", "10": "Gambling", "11": "Games", "12": "Hate/Discrimination", "13": "Health and Fitness", "14": "Humor", "15": "Instant Messaging", "16": "Jobs/Employment", "17": "Movies", "18": "News/Media", "19": "P2P/File sharing", "20": "Photo Sharing", "21": "Portals", "22": "Radio", "23": "Search Engines", "24": "Social Networking", "25": "Software/Technology", "26": "Television", "28": "Video Sharing", "29": "Visual Search Engines", "30": "Weapons", "31": "Webmail", "32": "Business Services", "33": "Educational Institutions", "34": "Financial Institutions", "35": "Government", "36": "Music", "37": "Parked Domains", "38": "Tobacco", "39": "Sports", "40": "Adult Themes", "41": "Lingerie/Bikini", "42": "Nudity", "43": "Proxy/Anonymizer", "44": "Pornography", "45": "Sexuality", "46": "Tasteless", "47": "Academic Fraud", "48": "Automotive", "49": "Forums/Message boards", "50": "Non-Profits", "51": "Podcasts", "52": "Politics", "53": "Religious", "54": "Research/Reference", "55": "Travel", "57": "Anime/Manga/Webcomic", "58": "Web Spam", "59": "Typo Squatting", "60": "Drive-by Downloads/Exploits", "61": "Dynamic DNS", "62": "Mobile Threats", "63": "High Risk Sites and Locations", "64": "Command and Control", "65": "Command and Control", "66": "Malware", "67": "Malware", "68": "Phishing", "108": "Newly Seen Domains", "109": "Potentially Harmful", "110": "DNS Tunneling VPN", "111": "Arts", "112": "Astrology", "113": "Computer Security", "114": "Digital Postcards", "115": "Dining and Drinking", "116": "Dynamic and Residential", "117": "Fashion", "118": "File Transfer Services", "119": "Freeware and Shareware", "120": "Hacking", "121": "Illegal Activities", "122": "Illegal Downloads", "123": "Infrastructure", "124": "Internet Telephony", "125": "Lotteries", "126": "Mobile Phones", "127": "Nature", "128": "Online Trading", "129": "Personal Sites", "130": "Professional Networking", "131": "Real Estate", "132": "SaaS and B2B", "133": "Safe for Kids", "134": "Science and Technology", "135": "Sex Education", "136": "Social Science", "137": "Society and Culture", "138": "Software Updates", "139": "Web Hosting", "140": "Web Page Translation", "141": "Organisation Email", "142": "Online Meetings", "143": "Paranormal", "144": "Personal VPN", "145": "DIY Projects", "146": "Hunting", "147": "Military", "150": "Cryptomining"}
-    
-
-    url = "https://investigate.api.umbrella.com/domains/categorization/"
-    payload = domains
-    headers = {
-        'Authorization': "Bearer " + config['investigate']['key'],
-        'Content-Type': "application/json",
-        'Cache-Control': "no-cache"
-    }
-
-    response = requests.request("POST", url, data=payload, headers=headers)
-
-    for item in response.json():
-        
-        content_cat = []
-        security_cat = []
-        scores = get_investigate_security_scores(item)
-        content = (response.json()[item]['content_categories'])
-        security = (response.json()[item]['security_categories'])
-        for category in content:
-            content_cat.append(investigate_categories[category])
-        for category in security:
-            security_cat.append(investigate_categories[category])
-        domains_db.insert({'domain':item,
-                         'domain_score':(get_investigate_domain_score(item),
-                         'dga_score':scores[0],
-                         'perplexity':scores[1],
-                         'securerank2':scores[2],
-                         'pagerank':scores[3],
-                         'asn_score':scores[4],
-                         'prefix_score':scores[5],
-                         'rip_score':scores[6],
-                         'attack':scores[7],
-                         'threat_type':scores[8],
-                         'found':scores[9],
-                         'content_cat':content_cat,
-                         'security':security_cat
-                         })
-
-def get_investigate_domain_score(domain):
-    
-    '''
-    Takes a domain name and returns its Risk Score from Umbrella Investigate.
-    '''
-
-    url = "https://investigate.api.umbrella.com/domains/risk-score/" + domain
-
-    headers = {
-        'Authorization': "Bearer " + config['investigate']['key'],
-        'Content-Type': "application/json",
-        'Cache-Control': "no-cache",
-    }
-
-    response = requests.request("GET", url, headers=headers)
-
-    return (response.json()['risk_score'])
-
 def get_investigate_security_scores(domain):
 
     url = "https://investigate.api.umbrella.com/security/name/" + domain
@@ -311,26 +269,71 @@ def get_investigate_security_scores(domain):
 
     return(scores)
 
-def find_malware_events_from_cognitive():
+def get_investigate_domain_score(domain):
     '''
-    TAXII Client to pull indications of compromise from Cognitive Intelligence
+    Takes a domain name and returns its Risk Score from Umbrella Investigate.
     '''
 
-    url = "https://taxii.cloudsec.sco.cisco.com/skym-taxii-ws/PollService/"
+    url = "https://investigate.api.umbrella.com/domains/risk-score/" + domain
 
-    payload = "<taxii_11:Poll_Request \n    xmlns:taxii_11=\"http://taxii.mitre.org/messages/taxii_xml_binding-1.1\"\n    message_id=\"96485\"\n    collection_name=\"%(flows)s\">\n    <taxii_11:Exclusive_Begin_Timestamp>2018-09-01T00:00:00Z</taxii_11:Exclusive_Begin_Timestamp>\n    <taxii_11:Inclusive_End_Timestamp>2018-09-30T12:00:00Z</taxii_11:Inclusive_End_Timestamp>\n    <taxii_11:Poll_Parameters allow_asynch=\"false\">\n        <taxii_11:Response_Type>FULL</taxii_11:Response_Type>\n    </taxii_11:Poll_Parameters>\n</taxii_11:Poll_Request>" % {flows:config['cognitive']['flows']}
     headers = {
-    'X-TAXII-Content-Type': "urn:taxii.mitre.org:protocol:http:1.0",
-    'X-TAXII-Services': "urn:taxii.mitre.org:services:1.1",
-    'X-TAXII-Protocol': "urn:taxii.mitre.org:message:xml:1.1",
-    'Content-Type': "application/xml; charset=UTF-8",
-    'Authorization': "Basic " + config['cognitivie']['base64'],
-    'Cache-Control': "no-cache",
+        'Authorization': "Bearer " + config['investigate']['key'],
+        'Content-Type': "application/json",
+        'Cache-Control': "no-cache",
+    }
+
+    response = requests.request("GET", url, headers=headers)
+
+    return (response.json()['risk_score'])
+
+def get_investigate_domains(domains):
+    '''
+    Gathers information about the domains associated with the indications of compromise discovered from Threat Grid.  This function returns the Content Category, Security Catogories, Risk Score (via investigateDomainScore(), and several other security metrics.  These are put into our "investigation" database.
+    '''
+    
+    investigate_categories = { "0": "Adware", "1": "Alcohol", "2": "Auctions", "3": "Blogs", "4": "Chat", "5": "Classifieds", "6": "Dating", "7": "Drugs", "8": "Ecommerce/Shopping", "9": "File Storage", "10": "Gambling", "11": "Games", "12": "Hate/Discrimination", "13": "Health and Fitness", "14": "Humor", "15": "Instant Messaging", "16": "Jobs/Employment", "17": "Movies", "18": "News/Media", "19": "P2P/File sharing", "20": "Photo Sharing", "21": "Portals", "22": "Radio", "23": "Search Engines", "24": "Social Networking", "25": "Software/Technology", "26": "Television", "28": "Video Sharing", "29": "Visual Search Engines", "30": "Weapons", "31": "Webmail", "32": "Business Services", "33": "Educational Institutions", "34": "Financial Institutions", "35": "Government", "36": "Music", "37": "Parked Domains", "38": "Tobacco", "39": "Sports", "40": "Adult Themes", "41": "Lingerie/Bikini", "42": "Nudity", "43": "Proxy/Anonymizer", "44": "Pornography", "45": "Sexuality", "46": "Tasteless", "47": "Academic Fraud", "48": "Automotive", "49": "Forums/Message boards", "50": "Non-Profits", "51": "Podcasts", "52": "Politics", "53": "Religious", "54": "Research/Reference", "55": "Travel", "57": "Anime/Manga/Webcomic", "58": "Web Spam", "59": "Typo Squatting", "60": "Drive-by Downloads/Exploits", "61": "Dynamic DNS", "62": "Mobile Threats", "63": "High Risk Sites and Locations", "64": "Command and Control", "65": "Command and Control", "66": "Malware", "67": "Malware", "68": "Phishing", "108": "Newly Seen Domains", "109": "Potentially Harmful", "110": "DNS Tunneling VPN", "111": "Arts", "112": "Astrology", "113": "Computer Security", "114": "Digital Postcards", "115": "Dining and Drinking", "116": "Dynamic and Residential", "117": "Fashion", "118": "File Transfer Services", "119": "Freeware and Shareware", "120": "Hacking", "121": "Illegal Activities", "122": "Illegal Downloads", "123": "Infrastructure", "124": "Internet Telephony", "125": "Lotteries", "126": "Mobile Phones", "127": "Nature", "128": "Online Trading", "129": "Personal Sites", "130": "Professional Networking", "131": "Real Estate", "132": "SaaS and B2B", "133": "Safe for Kids", "134": "Science and Technology", "135": "Sex Education", "136": "Social Science", "137": "Society and Culture", "138": "Software Updates", "139": "Web Hosting", "140": "Web Page Translation", "141": "Organisation Email", "142": "Online Meetings", "143": "Paranormal", "144": "Personal VPN", "145": "DIY Projects", "146": "Hunting", "147": "Military", "150": "Cryptomining"}
+    
+
+    url = "https://investigate.api.umbrella.com/domains/categorization/"
+    payload = domains
+    headers = {
+        'Authorization': "Bearer " + config['investigate']['key'],
+        'Content-Type': "application/json",
+        'Cache-Control': "no-cache"
     }
 
     response = requests.request("POST", url, data=payload, headers=headers)
 
-    print(response.text)
+    for item in response.json():
+        
+        content_cat = []
+        security_cat = []
+        scores = get_investigate_security_scores(item)
+        content = (response.json()[item]['content_categories'])
+        security = (response.json()[item]['security_categories'])
+        
+        for category in content:
+            content_cat.append(investigate_categories[category])
+        
+        for category in security:
+            security_cat.append(investigate_categories[category])
+
+        if bool(domains_db.get(querydb.domain == item)) == False:
+            hosts_db.insert({'domain':item,
+                           'domain_score':get_investigate_domain_score(item),
+                           'dga_score':scores[0],
+                           'perplexity':scores[1], 
+                           'securerank2':scores[2],
+                           'pagerank':scores[3],
+                           'asn_score':scores[4],
+                           'prefix_score':scores[5],
+                           'rip_score':scores[6],
+                           'attack':scores[7],
+                           'threat_type':scores[8],
+                           'found':scores[9],
+                           'content_cat':content_cat,
+                           'security_cat':security_cat
+                          })
 
 def block_with_umbrella(domain):
     '''
@@ -372,18 +375,17 @@ def create_new_webex_teams_incident_room(incident):
     ## New Incident %(incident)s
 
     Patient Zero
-    Computer Name: %(computer_name)s
+    Computer Name: %(computer)s
 
     Logged-in User: %(username)s
 
-    Host IP Address: %(host_ip_addresses)s
+    Host IP Address: %(hosts)s
 
     Zendesk Link: [Incident](http://link) 
     
-    ''' % {'incident': timestamp, 'computer_name': incident['computer_name'], 'username': incident['username'], 'host_ip_addresses': incident['host_ip_addresses']}
+    ''' % {'incident':timestamp, 'computer':incident['computer_name'], 'username':incident['username'], 'hosts':incident['host_ip_addresses']}
     message = webex_teams.messages.create(incident_room.id, markdown = md, files = ['./Incident Report.txt'])
     return (incident_room.id)
-
 
 if __name__ == '__main__':
     import os
@@ -393,6 +395,7 @@ if __name__ == '__main__':
     except ValueError:
         PORT = 5555
     app.run(HOST, PORT, debug=True)
+
 '''
 #Start the App
 
