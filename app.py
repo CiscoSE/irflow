@@ -69,19 +69,20 @@ querydb = Query()
 
 def main():
     print ('Starting...')
-    #get_investigate_security_scores("bing.com", config['investigate']['key'])
-    #get_investigate_domains("[\"www.bing.com\",\"github.com\",\"www.bing.com\",\"codeload.github.com\",\"7tno4hib47vlep5o.tor2web.fi\"]", config['investigate']['key'])
-    #get_samples_from_threatgrid(config['threatgrid']['hostname'],config['threatgrid']['key'],"ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa")
+    #get_investigate_security_scores("bing.com")
+    #get_investigate_domains("[\"www.bing.com\",\"github.com\",\"www.bing.com\",\"codeload.github.com\",\"7tno4hib47vlep5o.tor2web.fi\"]")
+    #get_samples_from_threatgrid("ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa")
     #find_malware_events_from_cognitive()
-    #find_malware_events_from_amp(config['amp4e']['client_id'], config['amp4e']['api_key'])
-    #incident_room = create_new_webex_teams_incident_room(config['webex_teams']['token'])
+    #find_malware_events_from_amp()
+    #incident_room = create_new_webex_teams_incident_room()
 
-def find_malware_events_from_amp(amp4e_client_id, amp4e_api_key):
+def find_malware_events_from_amp():
     '''
     Identifies indications of compromise from AMP for Endpoints.  Itemizes all hosts where AMP identifies malware was successfully executed
     '''
 
-    url = "https://" + amp4e_client_id + ":" + amp4e_api_key + "@api.amp.cisco.com/v1/events"
+    url = "https://%(client)s:%(key)s@api.amp.cisco.com/v1/events" % {'client':config['amp4e']['client_id'], 'key': config['amp4e']['api_key']}
+
     querystring = {"event_type[]":"1107296272"}
 
     headers = {
@@ -115,14 +116,14 @@ def find_malware_events_from_amp(amp4e_client_id, amp4e_api_key):
         #If the SHA is not in the threats_db, run it through Threatgrid to collect details about it.
         for sha in sha256s:
             if bool(threats_db.get(querydb.sha256 == sha)) == False:
-                get_samples_from_threatgrid(config['threatgrid']['hostname'],config['threatgrid']['key'],sha)
+                get_samples_from_threatgrid(sha)
 
-def quarantine_with_ise(ise_username, ise_password, mac_address = "66:96:a5:94:76:32"):
+def quarantine_with_ise(mac_address):
     '''
     Leverages Adaptive Network Control on ISE to quarantine the devices with malware infection
     '''
 
-    url = "https://%(ise_username)s:%(ise_password)s@%(ise_host)s/ers/config/ancendpoint/apply" % {'ise_username': ise_username, 'ise_password': ise_password, 'ise_hostname': config['ise']['hostname']}
+    url = "https://%(ise_username)s:%(ise_password)s@%(ise_hostname)s/ers/config/ancendpoint/apply" % {'ise_username':config['ise']['user'], 'ise_password':config['ise']['password'], 'ise_hostname':config['ise']['hostname']}
 
      payload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ns0:operationAdditionalData xmlns:ns0=\"ers.ise.cisco.com\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n   <requestAdditionalAttributes>\n      <additionalAttribute name=\"macAddress\" value=\"%(mac)s\"/>\n      <additionalAttribute name=\"policyName\" value=\"KickFromNetwork\"/>\n   </requestAdditionalAttributes>\n</ns0:operationAdditionalData>" % {'mac': mac_address}
 
@@ -135,12 +136,12 @@ def quarantine_with_ise(ise_username, ise_password, mac_address = "66:96:a5:94:7
 
     hosts_db.update({'quarantine': 'True'}, querydb.mac == mac_address)
 
-def unquarantine_with_ise(ise_username, ise_password, mac_address):
+def unquarantine_with_ise(mac_address):
     '''
     Leverages Adaptive Network Control on ISE to unquarantine the devices after they have been quarantined.
     '''
 
-    url = "https://%(ise_username)s:%(ise_password)s@%(ise_host)s/ers/config/ancendpoint/clear" % {'ise_username': ise_username, 'ise_password': ise_password, 'ise_hostname': config['ise']['hostname']}
+    url = "https://%(ise_username)s:%(ise_password)s@%(ise_hostname)s/ers/config/ancendpoint/clear" % {'ise_username':config['ise']['user'], 'ise_password':config['ise']['password'], 'ise_hostname':config['ise']['hostname']}
 
     payload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ns0:operationAdditionalData xmlns:ns0=\"ers.ise.cisco.com\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n   <requestAdditionalAttributes>\n      <additionalAttribute name=\"macAddress\" value=\"%(mac)s\"/>\n      <additionalAttribute name=\"policyName\" value=\"KickFromNetwork\"/>\n   </requestAdditionalAttributes>\n</ns0:operationAdditionalData>" % {'mac': mac_address}
 
@@ -153,14 +154,14 @@ def unquarantine_with_ise(ise_username, ise_password, mac_address):
 
     hosts_db.update({'quarantine': 'False'}, querydb.mac == mac_address)
 
-def get_samples_from_threatgrid(threatgrid_hostname,threatgrid_key,sha256):
+def get_samples_from_threatgrid(sha256):
     '''
     Pull information about the identified malware from ThreatGrid.
     '''
 
-    url = "https://" + threatgrid_hostname + "/api/v2/search/submissions"
+    url = "https://panacea.threatgrid.com/api/v2/search/submissions"
 
-    querystring = {"q":sha256,"api_key":threatgrid_key}
+    querystring = {"q":sha256,"api_key":config['threatgrid']['key']}
 
 
     headers = {
@@ -186,7 +187,7 @@ def get_samples_from_threatgrid(threatgrid_hostname,threatgrid_key,sha256):
             magics.append(item['item']['analysis']['metadata']['malware_desc'][0]['magic'])
         threat_score = (item['item']['analysis']['threat_score'])
         for item in samples:
-            collectedSamples = get_sample_domains_from_threatgrid(config['threatgrid']['hostname'],config['threatgrid']['key'],item)
+            collectedSamples = get_sample_domains_from_threatgrid(item)
             for domain in collectedSamples:
                 if domain not in sampleDomains:
                     sampleDomains.append(domain)
@@ -198,13 +199,13 @@ def get_samples_from_threatgrid(threatgrid_hostname,threatgrid_key,sha256):
                        'domains':sampleDomains
                      })
 
-def get_sample_domains_from_threatgrid(threatgrid_hostname, threatgrid_key, sample_id):
+def get_sample_domains_from_threatgrid(sample_id):
     '''
     Discovers a list of domains associated with a ThreatGrid Sample ID, obtained from querying the SHA256 hash.
     '''
-    url = "https://" + threatgrid_hostname + "/api/v2/samples/feeds/domains"
+    url = "https://panacea.threatgrid.com/api/v2/samples/feeds/domains"
 
-    querystring = {"sample":sample_id,"after":"2018-02-01","api_key":threatgrid_key}
+    querystring = {"sample":sample_id,"after":"2018-10-01","api_key":config['threatgrid']['key']}
 
     headers = {
     'Cache-Control': "no-cache",
@@ -220,7 +221,7 @@ def get_sample_domains_from_threatgrid(threatgrid_hostname, threatgrid_key, samp
         sampleDomains.append(item['domain'])
     return (sampleDomains)
 
-def get_investigate_domains(domains,investigate_token):
+def get_investigate_domains(domains):
     '''
     Gathers information about the domains associated with the indications of compromise discovered from Threat Grid.  This function returns the Content Category, Security Catogories, Risk Score (via investigateDomainScore(), and several other security metrics.  These are put into our "investigation" database.
     '''
@@ -231,7 +232,7 @@ def get_investigate_domains(domains,investigate_token):
     url = "https://investigate.api.umbrella.com/domains/categorization/"
     payload = domains
     headers = {
-        'Authorization': "Bearer " + investigate_token,
+        'Authorization': "Bearer " + config['investigate']['key'],
         'Content-Type': "application/json",
         'Cache-Control': "no-cache"
     }
@@ -242,7 +243,7 @@ def get_investigate_domains(domains,investigate_token):
         
         content_cat = []
         security_cat = []
-        scores = get_investigate_security_scores(item,investigate_token)
+        scores = get_investigate_security_scores(item)
         content = (response.json()[item]['content_categories'])
         security = (response.json()[item]['security_categories'])
         for category in content:
@@ -250,7 +251,7 @@ def get_investigate_domains(domains,investigate_token):
         for category in security:
             security_cat.append(investigate_categories[category])
         domains_db.insert({'domain':item,
-                         'domain_score':(get_investigate_domain_score(item,investigate_token)),
+                         'domain_score':(get_investigate_domain_score(item),
                          'dga_score':scores[0],
                          'perplexity':scores[1],
                          'securerank2':scores[2],
@@ -265,7 +266,7 @@ def get_investigate_domains(domains,investigate_token):
                          'security':security_cat
                          })
 
-def get_investigate_domain_score(domain,investigate_token):
+def get_investigate_domain_score(domain):
     '''
     Takes a domain name and returns its Risk Score from Umbrella Investigate.
     '''
@@ -273,7 +274,7 @@ def get_investigate_domain_score(domain,investigate_token):
     url = "https://investigate.api.umbrella.com/domains/risk-score/" + domain
 
     headers = {
-        'Authorization': "Bearer " + investigate_token,
+        'Authorization': "Bearer " + config['investigate']['key'],
         'Content-Type': "application/json",
         'Cache-Control': "no-cache",
     }
@@ -282,12 +283,12 @@ def get_investigate_domain_score(domain,investigate_token):
 
     return (response.json()['risk_score'])
 
-def get_investigate_security_scores(domain, investigate_token):
+def get_investigate_security_scores(domain):
 
     url = "https://investigate.api.umbrella.com/security/name/" + domain
 
     headers = {
-        'Authorization': "Bearer " + investigate_token,
+        'Authorization': "Bearer " + config['investigate']['key'],
         'Content-Type': "application/json",
         'Cache-Control': "no-cache",
     }
@@ -327,11 +328,11 @@ def find_malware_events_from_cognitive():
 
     print(response.text)
 
-def block_with_umbrella(domain,umbrella_key):
+def block_with_umbrella(domain):
 
     url = "https://s-platform.api.opendns.com/1.0/events"
 
-    querystring = {"customerKey":umbrella_key}
+    querystring = {"customerKey":config['umbrella']['key']}
 
     payload = [{"alertTime":datetime.datetime.now().isoformat(),
                 "deviceId":"ba6a59f4-e692-4724-ba36-c28132c761de",
@@ -350,9 +351,9 @@ def block_with_umbrella(domain,umbrella_key):
 
     print(response.text)
 
-def create_new_webex_teams_incident_room(webex_teams_access_token, incident):
+def create_new_webex_teams_incident_room(incident):
 
-    webex_teams = ciscosparkapi.CiscoSparkAPI(webex_teams_access_token)
+    webex_teams = ciscosparkapi.CiscoSparkAPI(config['webex_teams']['token'])
     timestamp = int(datetime.datetime.now().timestamp())
     time = datetime.datetime.now()
     formatted_time = time.strftime("%Y-%m-%d %H:%M")
@@ -360,7 +361,7 @@ def create_new_webex_teams_incident_room(webex_teams_access_token, incident):
     md = '''
     ## New Incident %(incident)s
 
-    ### Patient Zero
+    Patient Zero
     Computer Name: %(computer_name)s
 
     Logged-in User: %(username)s
