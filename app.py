@@ -267,6 +267,7 @@ def get_investigate_domains(domains):
                          })
 
 def get_investigate_domain_score(domain):
+    
     '''
     Takes a domain name and returns its Risk Score from Umbrella Investigate.
     '''
@@ -311,16 +312,19 @@ def get_investigate_security_scores(domain):
     return(scores)
 
 def find_malware_events_from_cognitive():
+    '''
+    TAXII Client to pull indications of compromise from Cognitive Intelligence
+    '''
 
     url = "https://taxii.cloudsec.sco.cisco.com/skym-taxii-ws/PollService/"
 
-    payload = "<taxii_11:Poll_Request \n    xmlns:taxii_11=\"http://taxii.mitre.org/messages/taxii_xml_binding-1.1\"\n    message_id=\"96485\"\n    collection_name=\"WEBFLOWS_CTA6551672149651114470_V3\">\n    <taxii_11:Exclusive_Begin_Timestamp>2018-09-01T00:00:00Z</taxii_11:Exclusive_Begin_Timestamp>\n    <taxii_11:Inclusive_End_Timestamp>2018-09-30T12:00:00Z</taxii_11:Inclusive_End_Timestamp>\n    <taxii_11:Poll_Parameters allow_asynch=\"false\">\n        <taxii_11:Response_Type>FULL</taxii_11:Response_Type>\n    </taxii_11:Poll_Parameters>\n</taxii_11:Poll_Request>"
+    payload = "<taxii_11:Poll_Request \n    xmlns:taxii_11=\"http://taxii.mitre.org/messages/taxii_xml_binding-1.1\"\n    message_id=\"96485\"\n    collection_name=\"%(flows)s\">\n    <taxii_11:Exclusive_Begin_Timestamp>2018-09-01T00:00:00Z</taxii_11:Exclusive_Begin_Timestamp>\n    <taxii_11:Inclusive_End_Timestamp>2018-09-30T12:00:00Z</taxii_11:Inclusive_End_Timestamp>\n    <taxii_11:Poll_Parameters allow_asynch=\"false\">\n        <taxii_11:Response_Type>FULL</taxii_11:Response_Type>\n    </taxii_11:Poll_Parameters>\n</taxii_11:Poll_Request>" % {flows:config['cognitive']['flows']}
     headers = {
     'X-TAXII-Content-Type': "urn:taxii.mitre.org:protocol:http:1.0",
     'X-TAXII-Services': "urn:taxii.mitre.org:services:1.1",
     'X-TAXII-Protocol': "urn:taxii.mitre.org:message:xml:1.1",
     'Content-Type': "application/xml; charset=UTF-8",
-    'Authorization': "Basic dGF4aWktMWYzNWIzOWMtOGU4Ni00OWNiLWFkYzMtNzE1NmMxY2M1N2YzOnhiRHJlV1A1aWxMOVBKUWJIYzdhNzFMMTIxaGVuU2F0bXBESXpMRVdGZ21uWXdCTg==",
+    'Authorization': "Basic " + config['cognitivie']['base64'],
     'Cache-Control': "no-cache",
     }
 
@@ -329,6 +333,9 @@ def find_malware_events_from_cognitive():
     print(response.text)
 
 def block_with_umbrella(domain):
+    '''
+    Creates a new custom block entry with Umbrella Enforcement.
+    '''
 
     url = "https://s-platform.api.opendns.com/1.0/events"
 
@@ -352,12 +359,15 @@ def block_with_umbrella(domain):
     print(response.text)
 
 def create_new_webex_teams_incident_room(incident):
+    '''
+    Creates a new Webex team room and populates it with the details of the incident from the incident report in the tool.
+    '''
 
     webex_teams = ciscosparkapi.CiscoSparkAPI(config['webex_teams']['token'])
     timestamp = int(datetime.datetime.now().timestamp())
     time = datetime.datetime.now()
     formatted_time = time.strftime("%Y-%m-%d %H:%M")
-    incident_room = webex_teams.rooms.create("Incident %(incident)s Created %(formatted_time)s CST/CDT" % {'incident': timestamp, 'formatted_time': formatted_time})
+    incident_room = webex_teams.rooms.create("Incident %(incident)s Created %(time)s CST/CDT" % {'incident': timestamp, 'time': formatted_time})
     md = '''
     ## New Incident %(incident)s
 
