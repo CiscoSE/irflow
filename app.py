@@ -11,6 +11,7 @@ Script Dependencies:
     flask
     ciscosparkapi
     pyyaml
+    time
 
 Depencency Installation:
     $ pip install -r requirements.txt
@@ -46,6 +47,7 @@ from tinydb import TinyDB,Query #import database for storing results locally.
 from flask import Flask  #import web application
 import ciscosparkapi #Webex Teams features for creating rooms
 import yaml #YAML for working with the config.yml
+import time
 
 #Initialize Flask and import routes from routes.py
 app = Flask(__name__)
@@ -71,7 +73,7 @@ def main():
     #get_investigate_domains("[\"www.bing.com\",\"github.com\",\"www.bing.com\",\"codeload.github.com\",\"7tno4hib47vlep5o.tor2web.fi\"]")
     #get_samples_from_threatgrid("ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa")
     #find_malware_events_from_cognitive()
-    #find_malware_events_from_amp()
+    find_malware_events_from_amp()
     #incident_room = create_new_webex_teams_incident_room()
 
 def find_malware_events_from_amp():
@@ -116,6 +118,7 @@ def find_malware_events_from_amp():
             if bool(threats_db.get(querydb.sha256 == sha)) == False:
                 get_samples_from_threatgrid(sha)
 
+
 def find_malware_events_from_cognitive():
     '''
     TAXII Client to pull indications of compromise from Cognitive Intelligence
@@ -123,15 +126,16 @@ def find_malware_events_from_cognitive():
 
     url = "https://taxii.cloudsec.sco.cisco.com/skym-taxii-ws/PollService/"
 
-    payload = "<taxii_11:Poll_Request \n
-        xmlns:taxii_11=\"http://taxii.mitre.org/messages/taxii_xml_binding-1.1\"\n
-        message_id=\"96485\"\n
-        collection_name=\"%(flows)s\">\n
-        <taxii_11:Exclusive_Begin_Timestamp>2018-09-01T00:00:00Z</taxii_11:Exclusive_Begin_Timestamp>\n
-        <taxii_11:Inclusive_End_Timestamp>2018-09-30T12:00:00Z</taxii_11:Inclusive_End_Timestamp>\n
-        <taxii_11:Poll_Parameters allow_asynch=\"false\">\n
-        <taxii_11:Response_Type>FULL</taxii_11:Response_Type>\n
-        </taxii_11:Poll_Parameters>\n</taxii_11:Poll_Request>" % {flows:config['cognitive']['flows']}
+    payload = '''<taxii_11:Poll_Request
+    xmlns:taxii_11="http://taxii.mitre.org/messages/taxii_xml_binding-1.1"
+    message_id="96485"
+    collection_name="%(flows)s">
+    <taxii_11:Exclusive_Begin_Timestamp>2018-09-01T00:00:00Z</taxii_11:Exclusive_Begin_Timestamp>
+    <taxii_11:Inclusive_End_Timestamp>2018-09-30T12:00:00Z</taxii_11:Inclusive_End_Timestamp>
+    <taxii_11:Poll_Parameters allow_asynch=\"false\">
+    <taxii_11:Response_Type>FULL</taxii_11:Response_Type>
+    </taxii_11:Poll_Parameters>
+    </taxii_11:Poll_Request>''' % {flows:config['cognitive']['flows']}
 
     headers = {
     'X-TAXII-Content-Type': "urn:taxii.mitre.org:protocol:http:1.0",
@@ -153,7 +157,7 @@ def quarantine_with_ise(mac_address):
 
     url = "https://%(ise_hostname)s:9060/ers/config/ancendpoint/apply" % {'ise_hostname':config['ise']['hostname']}
 
-     payload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ns0:operationAdditionalData xmlns:ns0=\"ers.ise.cisco.com\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n   <requestAdditionalAttributes>\n      <additionalAttribute name=\"macAddress\" value=\"%(mac)s\"/>\n      <additionalAttribute name=\"policyName\" value=\"KickFromNetwork\"/>\n   </requestAdditionalAttributes>\n</ns0:operationAdditionalData>" % {'mac':mac_address}
+    payload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ns0:operationAdditionalData xmlns:ns0=\"ers.ise.cisco.com\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n   <requestAdditionalAttributes>\n      <additionalAttribute name=\"macAddress\" value=\"%(mac)s\"/>\n      <additionalAttribute name=\"policyName\" value=\"KickFromNetwork\"/>\n   </requestAdditionalAttributes>\n</ns0:operationAdditionalData>" % {'mac':mac_address}
 
     headers = {
     'content-type': "application/xml",
@@ -220,11 +224,18 @@ def get_samples_from_threatgrid(sha256):
                 if domain not in sampleDomains:
                     sampleDomains.append(domain)
 
+    print(sha256)
+    print(collectedSamples)
+
+    time.sleep(20)
+    virustotal = get_virustotal_report(sha256)
+
     threats_db.insert({'sha256':sha256,
                        'magics':magics,
                        'threat_score':threat_score,
                        'filenames':filenames,
-                       'domains':sampleDomains
+                       'domains':sampleDomains,
+                       'virustotal':virustotal
                      })
 
 def get_sample_domains_from_threatgrid(sample_id):
@@ -369,12 +380,21 @@ def block_with_umbrella(domain):
 
 def get_virustotal_report(sha):
     params = {'apikey': config['virustotal']['public_api'], 'resource': sha}
-    headers = {
-	"Accept-Encoding": "gzip, deflate", "User-Agent" : "gzip, irflow"}
-	response = requests.get('https://www.virustotal.com/vtapi/v2/file/report', params=params, headers=headers)
-	json_response = response.json()
+    headers = {"Accept-Encoding": "gzip, deflate", "User-Agent" : "gzip,  My Python requests library example client or username"}
+    response = requests.get('https://www.virustotal.com/vtapi/v2/file/report', params=params, headers=headers)
+    json_response = response.json()
 
-    return(json_response)
+    detected = {}
+
+    if (json_response['response_code'] == 0):
+        result = {'link': 'Threat Not Found in VirusTotal', 'total': '0', 'positives': '0', 'detecting': detected}
+        return (result)
+    else:
+        for item in json_response['scans']:
+            if (json_response['scans'][item]['detected'] == True):
+                detected.update({item: json_response['scans'][item]['result']})
+        result = {'link': json_response['permalink'], 'total': json_response['total'], 'positives': json_response['positives'], 'detecting': detected}
+        return (result)
 
 def create_new_webex_teams_incident_room(incident):
     '''
@@ -401,7 +421,7 @@ def create_new_webex_teams_incident_room(incident):
     ''' % {'incident':timestamp, 'computer':incident['computer_name'], 'username':incident['username'], 'hosts':incident['host_ip_addresses']}
     message = webex_teams.messages.create(incident_room.id, markdown = md, files = ['./Incident Report.txt'])
     return (incident_room.id)
-
+'''
 if __name__ == '__main__':
     import os
     HOST = os.environ.get('SERVER_HOST', 'localhost')
@@ -410,10 +430,9 @@ if __name__ == '__main__':
     except ValueError:
         PORT = 5555
     app.run(HOST, PORT, debug=True)
-
 '''
+
 #Start the App
 
 if __name__ == "__main__":
     main()
-'''
