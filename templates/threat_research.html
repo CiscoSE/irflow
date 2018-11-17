@@ -47,6 +47,23 @@
 
 <br /> <br />
 
+<b> Threat Information From VirusTotal: </b> <br />
+
+{% if 'Not' in item['virustotal']['link'] %}
+{{item['virustotal']['link']}} <br /> <br />
+{% else %}
+<a href={{item['virustotal']['link']}}>{{item['virustotal']['link']}}</a> <br /> <br />
+{% endif %}
+
+Total Number of Queried AV Vendors: <b>{{item['virustotal']['total']}} </b> <br />
+Total Positive Threat Identifications: <b>{{item['virustotal']['positives']}}</b> <br /> <br />
+
+{% for (key,value) in item['virustotal']['detecting'].items() %}
+Detection Program: {{key}}, Detected As: {{value}} <br />
+{% endfor %}
+
+<br /> <br />
+
 <b> Recently Associated Domains: </b>
 
 <br />

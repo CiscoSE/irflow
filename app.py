@@ -73,7 +73,7 @@ def main():
     #get_investigate_domains("[\"www.bing.com\",\"github.com\",\"www.bing.com\",\"codeload.github.com\",\"7tno4hib47vlep5o.tor2web.fi\"]")
     #get_samples_from_threatgrid("ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa")
     #find_malware_events_from_cognitive()
-    find_malware_events_from_amp()
+    #find_malware_events_from_amp()
     #incident_room = create_new_webex_teams_incident_room()
 
 def find_malware_events_from_amp():
@@ -202,8 +202,6 @@ def get_samples_from_threatgrid(sha256):
 
     response = requests.request("GET", url, headers=headers, params=querystring)
 
-    #print(response.text)
-
     filenames = []
     magics = []
     sampleDomains= []
@@ -214,7 +212,6 @@ def get_samples_from_threatgrid(sha256):
             filenames.append(item['item']['filename'])
         if (item['item']['sample']) not in samples:
             samples.append(item['item']['sample'])
-        #print(item['item']['filename'])
         if (item['item']['analysis']['metadata']['malware_desc'][0]['magic']) not in magics:
             magics.append(item['item']['analysis']['metadata']['malware_desc'][0]['magic'])
         threat_score = (item['item']['analysis']['threat_score'])
@@ -224,9 +221,7 @@ def get_samples_from_threatgrid(sha256):
                 if domain not in sampleDomains:
                     sampleDomains.append(domain)
 
-    print(sha256)
-    print(collectedSamples)
-
+    #wait 20 seconds in between VirusTotal queries since API limit is 4 per minute
     time.sleep(20)
     virustotal = get_virustotal_report(sha256)
 
@@ -421,7 +416,7 @@ def create_new_webex_teams_incident_room(incident):
     ''' % {'incident':timestamp, 'computer':incident['computer_name'], 'username':incident['username'], 'hosts':incident['host_ip_addresses']}
     message = webex_teams.messages.create(incident_room.id, markdown = md, files = ['./Incident Report.txt'])
     return (incident_room.id)
-'''
+
 if __name__ == '__main__':
     import os
     HOST = os.environ.get('SERVER_HOST', 'localhost')
@@ -430,9 +425,10 @@ if __name__ == '__main__':
     except ValueError:
         PORT = 5555
     app.run(HOST, PORT, debug=True)
-'''
 
+'''
 #Start the App
 
 if __name__ == "__main__":
     main()
+'''
