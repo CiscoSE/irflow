@@ -367,6 +367,15 @@ def block_with_umbrella(domain):
 
     print(response.text)
 
+def get_virustotal_report(sha):
+    params = {'apikey': config['virustotal']['public_api'], 'resource': sha}
+    headers = {
+	"Accept-Encoding": "gzip, deflate", "User-Agent" : "gzip, irflow"}
+	response = requests.get('https://www.virustotal.com/vtapi/v2/file/report', params=params, headers=headers)
+	json_response = response.json()
+
+    return(json_response)
+
 def create_new_webex_teams_incident_room(incident):
     '''
     Creates a new Webex team room and populates it with the details of the incident from the incident report in the tool.
