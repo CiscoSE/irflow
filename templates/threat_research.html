@@ -52,10 +52,10 @@
 {% if 'Not' in item['virustotal']['link'] %}
 {{item['virustotal']['link']}} <br /> <br />
 {% else %}
-<a href={{item['virustotal']['link']}}>{{item['virustotal']['link']}}</a> <br /> <br />
+<a href="{{item['virustotal']['link']}}">{{item['virustotal']['link']}}</a> <br /> <br />
 {% endif %}
 
-Total Number of Queried AV Vendors: <b>{{item['virustotal']['total']}} </b> <br />
+Total Number of Queried AV Vendors: <b>{{item['virustotal']['total']}}</b> <br />
 Total Positive Threat Identifications: <b>{{item['virustotal']['positives']}}</b> <br /> <br />
 
 {% for (key,value) in item['virustotal']['detecting'].items() %}
@@ -81,7 +81,7 @@ Detection Program: {{key}}, Detected As: {{value}} <br />
           <tbody>
           {% for item in item['domains'] %}
           <tr>
-            <td><a href=http://localhost:5555/research/domains/{{item}}>{{item}}</a></td>
+            <td><a href="http://localhost:5555/research/domains/{{item}}">{{item}}</a></td>
             <td><form action="/block/{{item}}" method="POST"> <button type ="submit" class="btn btn--small">Block With Umbrella</button></form></td>
           </tr>
           {% endfor %}
