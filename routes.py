@@ -74,8 +74,8 @@ def unnuke_from_space(mac):
 #Process for sending blocked domain to Umbrella
 @app.route('/block/<string:domain_name>', methods=['POST'])
 def block_with_umbrella(domain_name):
-	from app import blockWithUmbrella
-	#blockWithUmbrella(domain)
+	from app import block_with_umbrella
+	#block_with_umbrella(domain)
 	domain_details = domains_db.search(querydb.domain == domain_name)
 	print (domain_name)
 	return render_template('domain_research.html', domain=domain_details)
