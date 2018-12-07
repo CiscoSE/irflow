@@ -391,29 +391,55 @@ def get_virustotal_report(sha):
         result = {'link': json_response['permalink'], 'total': json_response['total'], 'positives': json_response['positives'], 'detecting': detected}
         return (result)
 
-def create_new_webex_teams_incident_room(incident):
+def create_servicenow_incident():
+    '''
+    Creates a new incident in the ServiceNow ITSM to coordinate enterprise-wide tracking and response.
+    '''
+
+    timestamp = int(datetime.datetime.now().timestamp())
+    time = datetime.datetime.now()
+    formatted_time = time.strftime("%Y-%m-%d %H:%M")
+
+    url = "https://dev55144.service-now.com/api/now/v1/table/incident"
+    headers = {"Content-Type":"application/json","Accept":"application/json","Authorization":"Basic %(auth)s" % {"auth":config['servicenow']['basic']}}
+    payload = '''{\n    \"caller_id\": \"IR Flow\",
+                  \n    \"short_description\": \"Incident From %(date)s\",
+                  \n    \"description\": \"Incident Response Activity\",
+                  \n    \"assigned_to\": \"Security Team\",
+                  \n    \"impact\": \"2\",
+                  \n    \"urgency\": \"1\"\n}''' % {"date":formatted_time}
+
+    response = requests.request("POST", url, data=payload, headers=headers)
+
+    if response.status_code != 201:
+        print('Status:', response.status_code, 'Headers:', response.headers, 'Error Response:',response.json())
+        exit()
+    data = response.json()
+    ticket = data["result"]["number"]
+
+    return(ticket)
+
+def create_new_webex_teams_incident_room(incident, ticket):
     '''
     Creates a new Webex team room and populates it with the details of the incident from the incident report in the tool.
     '''
 
     webex_teams = ciscosparkapi.CiscoSparkAPI(config['webex_teams']['token'])
-    timestamp = int(datetime.datetime.now().timestamp())
-    time = datetime.datetime.now()
-    formatted_time = time.strftime("%Y-%m-%d %H:%M")
-    incident_room = webex_teams.rooms.create("Incident %(incident)s Created %(time)s CST/CDT" % {'incident': timestamp, 'time': formatted_time})
+    incident_room = webex_teams.rooms.create("Security Incident %(incident)s" % {'incident': ticket})
     md = '''
     ## New Incident %(incident)s
 
     Patient Zero
+
     Computer Name: %(computer)s
 
     Logged-in User: %(username)s
 
     Host IP Address: %(hosts)s
 
-    Zendesk Link: [Incident](http://link)
+    ServiceNow Link: https://dev55144.service-now.com/nav_to.do?uri=incident.do?sysparm_query=number=%(incident)s
 
-    ''' % {'incident':timestamp, 'computer':incident['computer_name'], 'username':incident['username'], 'hosts':incident['host_ip_addresses']}
+    ''' % {'incident':ticket, 'computer':incident['computer_name'], 'username':incident['username'], 'hosts':incident['host_ip_addresses']}
     message = webex_teams.messages.create(incident_room.id, markdown = md, files = ['./Incident Report.txt'])
     return (incident_room.id)
 

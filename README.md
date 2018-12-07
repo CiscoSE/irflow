@@ -32,7 +32,7 @@ Our solution will leverage the following Cisco technologies:
 and third-party tools including:
 
 * [VirusTotal](https://www.virustotal.com/)
-* [ITSM Ticketing System, such as Remedy or Zendesk](http://www.bmc.com/it-solutions/remedy-itsm.html)
+* [ServiceNow ITSM](https://www.servicenow.com/products/it-service-management.html)
 
 A stretch goal of this sprint is to add a physical incident response flow which will leverage:
 
@@ -46,7 +46,7 @@ A stretch goal of this sprint is to add a physical incident response flow which 
 
 * Brian Sak <brsak@cisco.com> - APO
 * Eddie Mendonca <eddiem@cisco.com> - GSSO
-* One more team member, unconfirmed at time of initial submission.
+* Paul Marsh <pmarsh@cisco.com> - USPO
 
 
 ## Solution Components

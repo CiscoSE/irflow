@@ -109,6 +109,7 @@ def research_malware(threat_name):
 def reports():
 	if request.method == 'POST':
 		from app import create_new_webex_teams_incident_room
+		from app import create_servicenow_incident
 		result = request.form
 		incident = {}
 		incident_report = open("Incident Report.txt", "w")
@@ -116,7 +117,8 @@ def reports():
 			incident[key] = value
 			incident_report.write(key + ": " + value + "\r\n")
 		incident_report.close()
-		incident_room = create_new_webex_teams_incident_room(incident)
+		servicenow_ticket = create_servicenow_incident()
+		incident_room = create_new_webex_teams_incident_room(incident,servicenow_ticket)
 		return render_template('reports.html')
 
 	if request.method == 'GET':
