@@ -12,6 +12,7 @@ Script Dependencies:
     ciscosparkapi
     pyyaml
     time
+    random
 
 Depencency Installation:
     $ pip install -r requirements.txt
@@ -48,6 +49,8 @@ from flask import Flask  #import web application
 import ciscosparkapi #Webex Teams features for creating rooms
 import yaml #YAML for working with the config.yml
 import time
+import sys
+from xml.etree import ElementTree
 
 #Initialize Flask and import routes from routes.py
 app = Flask(__name__)
@@ -123,30 +126,29 @@ def find_malware_events_from_cognitive():
     '''
     TAXII Client to pull indications of compromise from Cognitive Intelligence
     '''
+    from random import randint
+    import xml.dom.minidom
 
-    url = "https://taxii.cloudsec.sco.cisco.com/skym-taxii-ws/PollService/"
+    timestamp_start = "2018-12-04T00:00:00+00:00"
+    timestamp_end = "2018-12-06T00:00:00+00:00"
 
-    payload = '''<taxii_11:Poll_Request
-    xmlns:taxii_11="http://taxii.mitre.org/messages/taxii_xml_binding-1.1"
-    message_id="96485"
-    collection_name="%(flows)s">
-    <taxii_11:Exclusive_Begin_Timestamp>2018-09-01T00:00:00Z</taxii_11:Exclusive_Begin_Timestamp>
-    <taxii_11:Inclusive_End_Timestamp>2018-09-30T12:00:00Z</taxii_11:Inclusive_End_Timestamp>
-    <taxii_11:Poll_Parameters allow_asynch=\"false\">
-    <taxii_11:Response_Type>FULL</taxii_11:Response_Type>
-    </taxii_11:Poll_Parameters>
-    </taxii_11:Poll_Request>''' % {flows:config['cognitive']['flows']}
+    message_id = randint(0,99999)
+
+    url = "https://taxii.cloudsec.sco.cisco.com/skym-taxii-ws/PollService"
+
+    payload = "<taxii_11:Poll_Request\n xmlns:taxii_11=\"http://taxii.mitre.org/messages/taxii_xml_binding-1.1\"\n message_id=\"%(id)s\"\n collection_name=\"%(feed)s\">\n <taxii_11:Exclusive_Begin_Timestamp>%(begin)s</taxii_11:Exclusive_Begin_Timestamp>\n <taxii_11:Inclusive_End_Timestamp>%(end)s</taxii_11:Inclusive_End_Timestamp>\n <taxii_11:Poll_Parameters allow_asynch=\"false\">\n <taxii_11:Response_Type>FULL</taxii_11:Response_Type>\n </taxii_11:Poll_Parameters>\n</taxii_11:Poll_Request>" % {"id":message_id, "feed":feed, "begin":timestamp_start, "end":timestamp_end}
 
     headers = {
-    'X-TAXII-Content-Type': "urn:taxii.mitre.org:protocol:http:1.0",
-    'X-TAXII-Services': "urn:taxii.mitre.org:services:1.1",
-    'X-TAXII-Protocol': "urn:taxii.mitre.org:message:xml:1.1",
-    'Content-Type': "application/xml; charset=UTF-8",
-    'Authorization': "Basic " + config['cognitive']['base64'],
-    'Cache-Control': "no-cache",
+    'Accept': "application/xml",
+    'Content-Type': "application/xml",
+    'X-Taxii-Content-Type': "urn:taxii.mitre.org:message:xml:1.1",
+    'X-Taxii-Accept': "urn:taxii.mitre.org:message:xml:1.1",
+    'X-Taxii-Services': "urn:taxii.mitre.org:services:1.1",
+    'X-Taxii-Protocol': "urn:taxii.mitre.org:protocol:http:1.0",
+    'cache-control': "no-cache"
     }
 
-    response = requests.request("POST", url, data=payload, headers=headers)
+    response = requests.post(url, auth=(username, password), data=payload, headers=headers)
 
     print(response.text)
 
@@ -185,6 +187,35 @@ def unquarantine_with_ise(mac_address):
     response = requests.request("PUT", url, data=payload, headers=headers, auth=(config['ise']['user'], config['ise']['password']), verify=False)
 
     hosts_db.update({'quarantine': 'False'}, querydb.mac == mac_address)
+
+def find_active_user_from_ise(ip_or_mac):
+    '''
+    Query ISE to determine the actively logged in user for affected devices.
+    '''
+
+    url = "https://%(ise_hostname)s:9060/ers/config/ancendpoint/apply" % {'ise_hostname':config['ise']['hostname']}
+
+    headers= {
+        'content-type': "application/xml",
+        }
+
+    response = requests.request("GET", url, headers=headers, auth=(config['ise']['user'], config['ise']['password']), verify=False)
+
+    if(response.status_code == 200):
+        root = ElementTree.fromstring(response.text)
+        tree = ElementTree.ElementTree(root)
+
+        for user in tree.findall('activeSession'):
+            found_username="Not Found"
+            if ((user.find('nas_ip_address').text == ip_or_mac ) or
+                (user.find('calling_station_id').text == ip_or_mac )):
+                found_username = user.find('user_name').text
+                # print( "In loop, found active username: " + foundUsername )
+                break
+        return found_username
+        # print("Found ISE active user: " + ISEactiveUser)
+    else:
+        print("An error has ocurred with the following code %(error)s" % {'error': response.status_code})
 
 def get_samples_from_threatgrid(sha256):
     '''
