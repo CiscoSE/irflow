@@ -121,8 +121,13 @@ def find_malware_events_from_amp(quarantine):
                          'detection':item['detection'],
                          'disposition':item['file']['disposition'],
                          'file':(item['file']['identity']['sha256']),
-                         'quarantine':'False'
+                         'quarantine':'False',
+                         'logged_in':'User',
+                         'building':'building',
+                         'floor':'floor',
+                         'responder':'responder'
                          })
+                         
             #Automatically quarantine with ISE if set
             if (quarantine == 1):
                 quarantine_with_ise(((item['computer']['network_addresses'])[0]['mac']))
