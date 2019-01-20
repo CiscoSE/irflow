@@ -46,6 +46,15 @@ def threats():
 	else:
 		return "<h2> Invalid Request </h2>"
 
+@app.route('/hosts/<hostname>', methods=['GET', 'POST'])
+def hosts(hostname):
+	if request.method == 'GET':
+		host_details = hosts_db.search(querydb.hostname == hostname)
+		print (host_details)
+		return render_template('hosts.html', host=host_details)
+	else:
+		return "<h2> Invalid Request </h2>"
+
 @app.route('/response', methods=['GET', 'POST'])
 def response():
 	if request.method == 'GET':

@@ -22,7 +22,6 @@
       <table id="threat-datatable" class="table table--bordered">
           <thead>
               <tr>
-                  <th>Date</th>
                   <th>Hostname</th>
                   <th>IP Address</th>
                   <th>MAC Address</th>
@@ -30,10 +29,9 @@
               </tr>
           </thead>
           <tbody>
-          {% for item in hosts %}
+          {% for item in host %}
           <tr>
-          <td>{{item['date']}}</td>
-          <td><a href=http://localhost:5555/hosts/{{item['hostname']}}>{{item['hostname']}}</a></td>
+          <td>{{item['hostname']}}</td>
           <td>{{item['ip']}}</td>
           <td>{{item['mac']}}</td>
           <td><a href=http://localhost:5555/research/malware/{{item['file']}}>{{item['detection']}}</a></td>
@@ -44,6 +42,37 @@
     </div>
   </div>
 </div>
+
+<div class="container">
+  <div style="padding-top: 20px" class="responsive-table">
+    <div class="responsive-table">
+      <table id="threat-datatable" class="table table--bordered">
+          <thead>
+              <tr>
+                  <th>Logged In User</th>
+                  <th>Building</th>
+                  <th>Floor</th>
+                  <th>Local Incident Responder</th>
+              </tr>
+          </thead>
+          <tbody>
+          {% for item in host %}
+          <tr>
+          <td>{{item['logged_in']}}</td>
+          <td>{{item['building']}}</td>
+          <td>{{item['floor']}}</td>
+          <td>{{item['responder']}}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+Last Location from CMX:
+
+
 
 {% endblock %}
 
