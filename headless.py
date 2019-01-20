@@ -1,7 +1,7 @@
 '''
-irflow - Incident Response Workflow
+irflow (headless)- Incident Response Workflow Collection and Auto Quarantine
 
-This app enables security operations or an incident responder to leverage the Cisco security applications and tools to quickly assess hosts that have been compromised and respond by isolating them from the network.  In addition, the responder can identify malicious sources of information and use Umbrella and Firepower to block them, preventing other hosts from potential compromise from known malicious sources.
+This app compliments the irflow app by running a collection routine and can automatically quarantine potentially infected hosts.
 
 Script Dependencies:
     requests
@@ -13,6 +13,8 @@ Script Dependencies:
     pyyaml
     time
     random
+    sys
+    getopt
 
 Depencency Installation:
     $ pip install -r requirements.txt
@@ -42,20 +44,13 @@ try:
 except:
     pass
 
-import datetime #import datetime for ISO 8601 timestamps
-import getpass  #import getpass to mask password entries
 from tinydb import TinyDB,Query #import database for storing results locally.
-from flask import Flask  #import web application
 import ciscosparkapi #Webex Teams features for creating rooms
 import yaml #YAML for working with the config.yml
 import time
 import sys
+import getopt
 from xml.etree import ElementTree
-
-#Initialize Flask and import routes from routes.py
-app = Flask(__name__)
-wsgi_app = app.wsgi_app
-from routes import *
 
 #Open the config.yml file to retreive configuration details
 with open("config.yml", 'r') as stream:
@@ -70,16 +65,29 @@ threats_db = TinyDB('threats_db.json')
 domains_db = TinyDB('domains_db.json')
 querydb = Query()
 
-def main():
-    print ('Starting...')
-    #get_investigate_security_scores("bing.com")
-    #get_investigate_domains("[\"www.bing.com\",\"github.com\",\"www.bing.com\",\"codeload.github.com\",\"7tno4hib47vlep5o.tor2web.fi\"]")
-    #get_samples_from_threatgrid("ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa")
-    #find_malware_events_from_cognitive()
-    #find_malware_events_from_amp()
-    #incident_room = create_new_webex_teams_incident_room()
+def main(argv):
+    #Sets if automatic quarantine is enabled.  Use command-line option --quarantine
+    quarantine = 0
 
-def find_malware_events_from_amp():
+    print ('Starting headless, will query for IOCs every hour.')
+
+    try:
+        opts, args = getopt.getopt(argv,"hi:o:",["quarantine"])
+    except getopt.GetoptError:
+        print ('headless.py --quarantine')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print ('headless.py --quarantine for automatic quarantining of hosts')
+            sys.exit()
+        elif opt in ("--quarantine"):
+            quarantine = 1
+
+    while True:
+        find_malware_events_from_amp(quarantine)
+        time.sleep(3600)
+
+def find_malware_events_from_amp(quarantine):
     '''
     Identifies indications of compromise from AMP for Endpoints.  Itemizes all hosts where AMP identifies malware was successfully executed
     '''
@@ -115,12 +123,16 @@ def find_malware_events_from_amp():
                          'file':(item['file']['identity']['sha256']),
                          'quarantine':'False'
                          })
+            #Automatically quarantine with ISE if set
+            if (quarantine == 1):
+                quarantine_with_ise(((item['computer']['network_addresses'])[0]['mac']))
+
+            send_message_to_teams(((item['computer']['network_addresses'])[0]['mac']), quarantine)
 
         #If the SHA is not in the threats_db, run it through Threatgrid to collect details about it.
         for sha in sha256s:
             if bool(threats_db.get(querydb.sha256 == sha)) == False:
                 get_samples_from_threatgrid(sha)
-
 
 def find_malware_events_from_cognitive():
     '''
@@ -170,24 +182,6 @@ def quarantine_with_ise(mac_address):
 
     hosts_db.update({'quarantine': 'True'}, querydb.mac == mac_address)
 
-def unquarantine_with_ise(mac_address):
-    '''
-    Leverages Adaptive Network Control on ISE to unquarantine the devices after they have been quarantined.
-    '''
-
-    url = "https://%(ise_hostname)s:9060/ers/config/ancendpoint/clear" % {'ise_hostname':config['ise']['hostname']}
-
-    payload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ns0:operationAdditionalData xmlns:ns0=\"ers.ise.cisco.com\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n   <requestAdditionalAttributes>\n      <additionalAttribute name=\"macAddress\" value=\"%(mac)s\"/>\n      <additionalAttribute name=\"policyName\" value=\"KickFromNetwork\"/>\n   </requestAdditionalAttributes>\n</ns0:operationAdditionalData>" % {'mac':mac_address}
-
-    headers = {
-    'content-type': "application/xml",
-    'accept': "application/json"
-    }
-
-    response = requests.request("PUT", url, data=payload, headers=headers, auth=(config['ise']['user'], config['ise']['password']), verify=False)
-
-    hosts_db.update({'quarantine': 'False'}, querydb.mac == mac_address)
-
 def find_active_user_from_ise(ip_or_mac):
     '''
     Query ISE to determine the actively logged in user for affected devices.
@@ -216,11 +210,6 @@ def find_active_user_from_ise(ip_or_mac):
         # print("Found ISE active user: " + ISEactiveUser)
     else:
         print("An error has ocurred with the following code %(error)s" % {'error': response.status_code})
-
-def get_host_location(mac):
-    #Something
-    print ()
-
 def get_samples_from_threatgrid(sha256):
     '''
     Pull information about the identified malware from ThreatGrid.
@@ -267,6 +256,24 @@ def get_samples_from_threatgrid(sha256):
                        'domains':sampleDomains,
                        'virustotal':virustotal
                      })
+
+def get_virustotal_report(sha):
+    params = {'apikey': config['virustotal']['public_api'], 'resource': sha}
+    headers = {"Accept-Encoding": "gzip, deflate", "User-Agent" : "gzip,  My Python requests library example client or username"}
+    response = requests.get('https://www.virustotal.com/vtapi/v2/file/report', params=params, headers=headers)
+    json_response = response.json()
+
+    detected = {}
+
+    if (json_response['response_code'] == 0):
+        result = {'link': 'Threat Not Found in VirusTotal', 'total': '0', 'positives': '0', 'detecting': detected}
+        return (result)
+    else:
+        for item in json_response['scans']:
+            if (json_response['scans'][item]['detected'] == True):
+                detected.update({item: json_response['scans'][item]['result']})
+        result = {'link': json_response['permalink'], 'total': json_response['total'], 'positives': json_response['positives'], 'detecting': detected}
+        return (result)
 
 def get_sample_domains_from_threatgrid(sample_id):
     '''
@@ -382,114 +389,22 @@ def get_investigate_domains(domains):
                            'security_cat':security_cat
                           })
 
-def block_with_umbrella(domain):
+def send_message_to_teams(host, quarantine):
     '''
-    Creates a new custom block entry with Umbrella Enforcement.
-    '''
-
-    url = "https://s-platform.api.opendns.com/1.0/events"
-
-    querystring = {"customerKey":config['umbrella']['key']}
-
-    payload = [{"alertTime":datetime.datetime.now().isoformat(),
-                "deviceId":"ba6a59f4-e692-4724-ba36-c28132c761de",
-                "deviceVersion":"13.7a",
-                "dstDomain":domain,
-                "dstUrl":"http://" + domain + "/",
-                "eventTime":datetime.datetime.now().isoformat(),
-                "protocolVersion":"1.0a",
-                "providerName":"Security Platform"}]
-    headers = {
-        'Content-Type': "application/json",
-        'Cache-Control': "no-cache",
-        }
-
-    response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
-
-    print(response.text)
-
-def get_virustotal_report(sha):
-    params = {'apikey': config['virustotal']['public_api'], 'resource': sha}
-    headers = {"Accept-Encoding": "gzip, deflate", "User-Agent" : "gzip,  My Python requests library example client or username"}
-    response = requests.get('https://www.virustotal.com/vtapi/v2/file/report', params=params, headers=headers)
-    json_response = response.json()
-
-    detected = {}
-
-    if (json_response['response_code'] == 0):
-        result = {'link': 'Threat Not Found in VirusTotal', 'total': '0', 'positives': '0', 'detecting': detected}
-        return (result)
-    else:
-        for item in json_response['scans']:
-            if (json_response['scans'][item]['detected'] == True):
-                detected.update({item: json_response['scans'][item]['result']})
-        result = {'link': json_response['permalink'], 'total': json_response['total'], 'positives': json_response['positives'], 'detecting': detected}
-        return (result)
-
-def create_servicenow_incident():
-    '''
-    Creates a new incident in the ServiceNow ITSM to coordinate enterprise-wide tracking and response.
-    '''
-
-    timestamp = int(datetime.datetime.now().timestamp())
-    time = datetime.datetime.now()
-    formatted_time = time.strftime("%Y-%m-%d %H:%M")
-
-    url = "https://dev55144.service-now.com/api/now/v1/table/incident"
-    headers = {"Content-Type":"application/json","Accept":"application/json","Authorization":"Basic %(auth)s" % {"auth":config['servicenow']['basic']}}
-    payload = '''{\n    \"caller_id\": \"IR Flow\",
-                  \n    \"short_description\": \"Incident From %(date)s\",
-                  \n    \"description\": \"Incident Response Activity\",
-                  \n    \"assigned_to\": \"Security Team\",
-                  \n    \"impact\": \"2\",
-                  \n    \"urgency\": \"1\"\n}''' % {"date":formatted_time}
-
-    response = requests.request("POST", url, data=payload, headers=headers)
-
-    if response.status_code != 201:
-        print('Status:', response.status_code, 'Headers:', response.headers, 'Error Response:',response.json())
-        exit()
-    data = response.json()
-    ticket = data["result"]["number"]
-
-    return(ticket)
-
-def create_new_webex_teams_incident_room(incident, ticket):
-    '''
-    Creates a new Webex team room and populates it with the details of the incident from the incident report in the tool.
+    Posts a message to a Teams space to alert team to a newly infected host.
     '''
 
     webex_teams = ciscosparkapi.CiscoSparkAPI(config['webex_teams']['token'])
-    incident_room = webex_teams.rooms.create("Security Incident %(incident)s" % {'incident': ticket})
-    md = '''
-    ## New Incident %(incident)s
+    irt_room = config['webex_teams']['irt_room']
 
-    Patient Zero
+    if (quarantine == 1):
+        message = f"Host {host} was discovered compromised and automatically quarantined."
+    else:
+        message = f"Host {host} was discovered compromised. Use irflow to investigate and/or quarantine."
 
-    Computer Name: %(computer)s
+    send = webex_teams.messages.create(irt_room, text = message)
 
-    Logged-in User: %(username)s
-
-    Host IP Address: %(hosts)s
-
-    ServiceNow Link: https://dev55144.service-now.com/nav_to.do?uri=incident.do?sysparm_query=number=%(incident)s
-
-    ''' % {'incident':ticket, 'computer':incident['computer_name'], 'username':incident['username'], 'hosts':incident['host_ip_addresses']}
-    message = webex_teams.messages.create(incident_room.id, markdown = md, files = ['./Incident Report.txt'])
-    return (incident_room.id)
-
-if __name__ == '__main__':
-    import os
-    HOST = os.environ.get('SERVER_HOST', 'localhost')
-    try:
-        PORT = int(os.environ.get('SERVER_PORT', '5555'))
-    except ValueError:
-        PORT = 5555
-    app.run(HOST, PORT, debug=True)
-
-'''
 #Start the App
 
 if __name__ == "__main__":
-    main()
-'''
+    main(sys.argv[1:])
