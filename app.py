@@ -6,13 +6,14 @@ This app enables security operations or an incident responder to leverage the Ci
 Script Dependencies:
     requests
     datetime
-    getpass
     tinydb
     flask
     ciscosparkapi
     pyyaml
     time
     random
+    sys
+    xml.etree
 
 Depencency Installation:
     $ pip install -r requirements.txt
@@ -43,7 +44,6 @@ except:
     pass
 
 import datetime #import datetime for ISO 8601 timestamps
-import getpass  #import getpass to mask password entries
 from tinydb import TinyDB,Query #import database for storing results locally.
 from flask import Flask  #import web application
 import ciscosparkapi #Webex Teams features for creating rooms
@@ -106,6 +106,11 @@ def find_malware_events_from_amp():
         #Check to see if the host is in the database or not.  If not add it.
         if bool(hosts_db.get(querydb.hostname == item['computer']['hostname'])) == False:
 
+            logged_in = find_active_user_from_ise((item['computer']['network_addresses'])[0]['ip'])
+            building = 'building'
+            floor = 'floor'
+            responder = 'responder'
+
             hosts_db.insert({'date':item['date'],
                          'hostname':item['computer']['hostname'],
                          'ip':((item['computer']['network_addresses'])[0]['ip']),
@@ -114,10 +119,10 @@ def find_malware_events_from_amp():
                          'disposition':item['file']['disposition'],
                          'file':(item['file']['identity']['sha256']),
                          'quarantine':'False',
-                         'logged_in':'User',
-                         'building':'building',
-                         'floor':'floor',
-                         'responder':'responder'
+                         'logged_in':logged_in,
+                         'building':building,
+                         'floor':floor,
+                         'responder':responder
                          })
 
         #If the SHA is not in the threats_db, run it through Threatgrid to collect details about it.
@@ -439,7 +444,7 @@ def create_servicenow_incident():
     time = datetime.datetime.now()
     formatted_time = time.strftime("%Y-%m-%d %H:%M")
 
-    url = "https://dev55144.service-now.com/api/now/v1/table/incident"
+    url = "https://dev60343.service-now.com/api/now/v1/table/incident"
     headers = {"Content-Type":"application/json","Accept":"application/json","Authorization":"Basic %(auth)s" % {"auth":config['servicenow']['basic']}}
     payload = '''{\n    \"caller_id\": \"IR Flow\",
                   \n    \"short_description\": \"Incident From %(date)s\",
@@ -476,7 +481,7 @@ def create_new_webex_teams_incident_room(incident, ticket):
 
     Host IP Address: %(hosts)s
 
-    ServiceNow Link: https://dev55144.service-now.com/nav_to.do?uri=incident.do?sysparm_query=number=%(incident)s
+    ServiceNow Link: https://dev60343.service-now.com/nav_to.do?uri=incident.do?sysparm_query=number=%(incident)s
 
     ''' % {'incident':ticket, 'computer':incident['computer_name'], 'username':incident['username'], 'hosts':incident['host_ip_addresses']}
     message = webex_teams.messages.create(incident_room.id, markdown = md, files = ['./Incident Report.txt'])

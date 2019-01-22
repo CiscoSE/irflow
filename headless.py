@@ -6,7 +6,6 @@ This app compliments the irflow app by running a collection routine and can auto
 Script Dependencies:
     requests
     datetime
-    getpass
     tinydb
     flask
     ciscosparkapi
@@ -15,6 +14,7 @@ Script Dependencies:
     random
     sys
     getopt
+    xml.etree
 
 Depencency Installation:
     $ pip install -r requirements.txt
@@ -114,6 +114,11 @@ def find_malware_events_from_amp(quarantine):
         #Check to see if the host is in the database or not.  If not add it.
         if bool(hosts_db.get(querydb.hostname == item['computer']['hostname'])) == False:
 
+            logged_in = find_active_user_from_ise((item['computer']['network_addresses'])[0]['ip'])
+            building = 'building'
+            floor = 'floor'
+            responder = 'responder'
+
             hosts_db.insert({'date':item['date'],
                          'hostname':item['computer']['hostname'],
                          'ip':((item['computer']['network_addresses'])[0]['ip']),
@@ -122,12 +127,12 @@ def find_malware_events_from_amp(quarantine):
                          'disposition':item['file']['disposition'],
                          'file':(item['file']['identity']['sha256']),
                          'quarantine':'False',
-                         'logged_in':'User',
-                         'building':'building',
-                         'floor':'floor',
-                         'responder':'responder'
+                         'logged_in':logged_in,
+                         'building':building,
+                         'floor':floor,
+                         'responder':responder
                          })
-                         
+
             #Automatically quarantine with ISE if set
             if (quarantine == 1):
                 quarantine_with_ise(((item['computer']['network_addresses'])[0]['mac']))
@@ -393,6 +398,36 @@ def get_investigate_domains(domains):
                            'content_cat':content_cat,
                            'security_cat':security_cat
                           })
+
+def find_active_user_from_ise(ip_or_mac):
+    '''
+    Query ISE to determine the actively logged in user for affected devices.
+    '''
+
+    url = "https://%(ise_hostname)s:9060/ers/config/ancendpoint/apply" % {'ise_hostname':config['ise']['hostname']}
+
+    headers= {
+        'content-type': "application/xml",
+        }
+
+    response = requests.request("GET", url, headers=headers, auth=(config['ise']['user'], config['ise']['password']), verify=False)
+
+    if(response.status_code == 200):
+        root = ElementTree.fromstring(response.text)
+        tree = ElementTree.ElementTree(root)
+
+        for user in tree.findall('activeSession'):
+            found_username="Not Found"
+            if ((user.find('nas_ip_address').text == ip_or_mac ) or
+                (user.find('calling_station_id').text == ip_or_mac )):
+                found_username = user.find('user_name').text
+                # print( "In loop, found active username: " + foundUsername )
+                break
+        return found_username
+        # print("Found ISE active user: " + ISEactiveUser)
+    else:
+        print("An error has ocurred with the following code %(error)s" % {'error': response.status_code})
+
 
 def send_message_to_teams(host, quarantine):
     '''
