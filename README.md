@@ -25,22 +25,13 @@ Our solution will leverage the following Cisco technologies:
 * [Identity Services Engine](https://www.cisco.com/c/en/us/products/security/identity-services-engine/index.html)
 * [Cognitive Intelligence](https://www.cisco.com/c/en/us/products/security/cognitive-threat-analytics/index.html)
 * [Cisco Threat Response](https://www.cisco.com/c/en/us/products/security/threat-response.html)
-* [Cisco Threat Intelligence Director](https://www.cisco.com/c/en/us/td/docs/security/firepower/622/configuration/guide/fpmc-config-guide-v622/threat_intelligence_director_tid.pdf)
-* [Firepower Management Center/Firepower Threat Defense](https://www.cisco.com/c/en/us/products/security/firewalls/index.html)
 * [Webex Teams](https://www.webex.com/products/teams/index.html)
+* [CMX Dectect and Locate - Real Time Location Services](https://www.cisco.com/c/en/us/solutions/enterprise-networks/connected-mobile-experiences/index.html)
 
 and third-party tools including:
 
 * [VirusTotal](https://www.virustotal.com/)
 * [ServiceNow ITSM](https://www.servicenow.com/products/it-service-management.html)
-
-A stretch goal of this sprint is to add a physical incident response flow which will leverage:
-
-* [Catalyst 9000-series](https://www.cisco.com/c/en/us/products/switches/catalyst-9000.html)
-* [Wireless LAN Controllers and Access Points](https://www.cisco.com/c/en/us/products/wireless/wireless-lan-controller/index.html)
-* [CMX Dectect and Locate - Real Time Location Services](https://www.cisco.com/c/en/us/solutions/enterprise-networks/connected-mobile-experiences/index.html)
-* [DNA Center](https://www.cisco.com/c/en/us/products/cloud-systems-management/dna-center/index.html)
-* [Meraki Scanning (Location Services)](https://meraki.cisco.com/technologies/location-analytics)
 
 ## Team Members
 
@@ -68,9 +59,9 @@ git clone https://wwwin-github.cisco.com/brsak/irflow.git  <br>
 pip install -r requirements.txt <br>
 python ./app.py
 
-## Documentation
+## Documentation and Demonstration
 
-Documentation and video demonstration coming soon.
+A video demonstration of this project can be found at https://sharevideo.cisco.com/#/videos/4cb83daf-5db1-4bf8-bc9a-48094a3fd17a
 
 ## License
 
