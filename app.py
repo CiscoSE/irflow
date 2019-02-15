@@ -444,7 +444,7 @@ def create_servicenow_incident():
     time = datetime.datetime.now()
     formatted_time = time.strftime("%Y-%m-%d %H:%M")
 
-    url = "https://dev60343.service-now.com/api/now/v1/table/incident"
+    url = "https://%(sn_host)s/api/now/v1/table/incident" % {'sn_host': config['servicenow']['hostname']}
     headers = {"Content-Type":"application/json","Accept":"application/json","Authorization":"Basic %(auth)s" % {"auth":config['servicenow']['basic']}}
     payload = '''{\n    \"caller_id\": \"IR Flow\",
                   \n    \"short_description\": \"Incident From %(date)s\",
@@ -481,9 +481,9 @@ def create_new_webex_teams_incident_room(incident, ticket):
 
     Host IP Address: %(hosts)s
 
-    ServiceNow Link: https://dev60343.service-now.com/nav_to.do?uri=incident.do?sysparm_query=number=%(incident)s
+    ServiceNow Link: https://%(sn_host)s/nav_to.do?uri=incident.do?sysparm_query=number=%(incident)s
 
-    ''' % {'incident':ticket, 'computer':incident['computer_name'], 'username':incident['username'], 'hosts':incident['host_ip_addresses']}
+    ''' % {'incident':ticket, 'computer':incident['computer_name'], 'username':incident['username'], 'hosts':incident['host_ip_addresses'], 'sn_host':config['servicenow']['hostname']}
     message = webex_teams.messages.create(incident_room.id, markdown = md, files = ['./Incident Report.txt'])
     return (incident_room.id)
 
