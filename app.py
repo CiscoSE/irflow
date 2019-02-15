@@ -216,7 +216,7 @@ def find_active_user_from_ise(ip_or_mac):
 
         for user in tree.findall('activeSession'):
             found_username="Not Found"
-            if ((user.find('nas_ip_address').text == ip_or_mac ) or
+            if ((user.find('framed_ip_address').text == ip_or_mac ) or
                 (user.find('calling_station_id').text == ip_or_mac )):
                 found_username = user.find('user_name').text
                 # print( "In loop, found active username: " + foundUsername )
