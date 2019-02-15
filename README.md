@@ -57,8 +57,8 @@ Provide a brief overview of how to use the solution  -->
 
 git clone https://github.com/CiscoSE/irflow.git  <br>
 pip install -r requirements.txt <br>
-edit config.sample.yml with your API keys and credentials
-rename config.sample.yml to config.yml
+edit config.sample.yml with your API keys and credentials <br>
+rename config.sample.yml to config.yml <br>
 python ./app.py (web interface) or python ./headless.py (service)
 
 ## Documentation and Demonstration
