@@ -63,7 +63,13 @@ python ./app.py (web interface) or python ./headless.py (service)
 
 ## Documentation and Demonstration
 
-A video demonstration of this project can be found at https://sharevideo.cisco.com/#/videos/4cb83daf-5db1-4bf8-bc9a-48094a3fd17a (Cisco Internal) or https://youtu.be/KwFILkVnbEo (public)
+A video demonstration of this project can be found at https://sharevideo.cisco.com/#/videos/4cb83daf-5db1-4bf8-bc9a-48094a3fd17a (Cisco Internal) or https://youtu.be/KwFILkVnbEo (public) <br> <br>
+
+The web interface relies on three databases that are populated with details from the API calls: clients_db.json, domains_db.json, and hosts_db.json. Running the headless script first will create and populate these databases.  After initial creation, you can use the web interface and it will display the collected data.  The headless script will continue to add new IOCs and associated details to the databases on an hourly basis when it is running or can be triggered on demand to gather new details. <br> <br>
+
+The web interface runs on a localized instance on port 5555.  After running app.py, you can access the web interface using http://localhost:5555. <br> <br>
+
+Currently, the app requires AMP4E, Investigate, Threat Grid, and Umbrella at a minimum to operate.  ISE is required for user details and threat response and Webex Teams and ServiceNow are required for the incident report functionality. Cognitive Intelligence, Firepower, Cisco Threat Response, and CMX are optional and can omitted with minimal changes to the code.
 
 ## License
 
