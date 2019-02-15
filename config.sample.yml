@@ -1,0 +1,39 @@
+amp4e:
+  api_key: [created at https://console.amp.cisco.com/api_credentials]
+  client_id: [created at https://console.amp.cisco.com/api_credentials]
+  hostname: api.amp.cisco.com
+cognitive:
+  feed: WEBFLOWS_CTAXXXXXXXXXXXX_V3 [replace with your feed]
+  user: [created at https://cta.eu.amp.cisco.com/CWSP/customer]
+  password: [created at https://cta.eu.amp.cisco.com/CWSP/customer]
+  service: https://taxii.cloudsec.sco.cisco.com/skym-taxii-ws/PollService
+  base64: [username:password encoded to Base64]
+fmc:
+  hostname: [Your FMC IP Address or Hostname]
+  password: password
+  user: admin
+investigate:
+  hostname: investigate.api.umbrella.com
+  key: [created at https://investigate.umbrella.com/tokens-view]
+ise:
+  hostname: [Your ISE PSN]
+  password: password
+  user: admin
+threatgrid:
+  hostname: panacea.threatgrid.com
+  key: [created at https://panacea.threatgrid.com]
+umbrella:
+  hostname: s-platform.api.opendns.com
+  key: [created at https://dashboard.umbrella.com/o/2027680/#/admin/apikeys]
+  secret: [created at https://dashboard.umbrella.com/o/2027680/#/admin/apikeys]
+webex_teams:
+  token: [found at https://developer.webex.com/docs/api/getting-started]
+  irt_room: [Replace with the Room ID for your Incident Reponse Team Room]
+virustotal:
+  public_api: [created at https://www.virustotal.com/en/documentation/public-api]
+  private_api: [Use this if you have a VT private API]
+servicenow:
+  hostname: [Your ServiceNow hostname]
+  user: admin
+  password: password
+  basic: [username:password encoded Base64]
