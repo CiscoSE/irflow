@@ -55,13 +55,13 @@ Provide a brief overview of how to use the solution  -->
 
 ## Installation
 
-git clone https://wwwin-github.cisco.com/brsak/irflow.git  <br>
+git clone https://github.com/CiscoSE/irflow.git  <br>
 pip install -r requirements.txt <br>
-python ./app.py
+python ./app.py (web interface) or python ./headless.py (service)
 
 ## Documentation and Demonstration
 
-A video demonstration of this project can be found at https://sharevideo.cisco.com/#/videos/4cb83daf-5db1-4bf8-bc9a-48094a3fd17a
+A video demonstration of this project can be found at https://sharevideo.cisco.com/#/videos/4cb83daf-5db1-4bf8-bc9a-48094a3fd17a (Cisco Internal) or https://youtu.be/KwFILkVnbEo (public)
 
 ## License
 
