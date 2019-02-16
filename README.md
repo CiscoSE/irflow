@@ -71,6 +71,20 @@ The web interface runs on a localized instance on port 5555.  After running app.
 
 Currently, the app requires AMP4E, Investigate, Threat Grid, and Umbrella at a minimum to operate.  ISE is required for user details and threat response and Webex Teams and ServiceNow are required for the incident report functionality. Cognitive Intelligence, Firepower, Cisco Threat Response, and CMX are optional and can omitted with minimal changes to the code.
 
+Features:
+
+Threat Investigation - Lists the IOCs and details about impacted hosts.  Clicking on the hostname reveals additional details about logged in users, host location, and site contact. <br>
+
+Threat Response - Allows you to initiate an Rapid Threat Response action against an identified threat.  The host will be quarantined from ISE using the ANC feature. <br>
+
+Threat Research - Provides additional details from Threat Grid and Umbrella Investigate using the threat (SHA256) as a query term. <br>
+
+Incident Reports - Populated by the investigator, this form will be included with the creation of a new Webex Teams room and will trigger the creation of a service ticket in ServiceNow. <br>
+
+Settings (gear icon) - Add or update any of the fields from the config.yml file. <br>
+
+Search (magnifying glass icon) - Search the database for a MAC, IP or SHA256.
+
 ## License
 
 Provided under Cisco Sample Code License, for details see [LICENSE](./LICENSE.md)
