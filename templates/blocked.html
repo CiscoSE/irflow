@@ -1,0 +1,44 @@
+{% extends 'base_layout.html' %}
+{% set active_sidebar = "threats" %}
+
+{% block mainpanel %}
+
+<br>
+
+<div class="col-md-6">
+      <div class="ui-steps ui-steps--vertical">
+            <div class="ui-step active">
+                <div class="step__icon">3</div>
+                <div class="step__label">Find Malware Samples (Threat Grid)</div>
+            </div>
+            <div class="ui-step active">
+                <div class="step__icon">4</div>
+                <div class="step__label">Collect and Analyse Suspect Domains (Investigate)</div>
+            </div>
+      </div>
+</div>
+
+<hr>
+
+<div class="row no-gutters">
+    <div class="col-md-4">
+        <div class="hero hero--ltgray">
+            <span class="text-uppercase">Added to Blocklist</span>
+        </div>
+    </div>
+</div>
+
+<b> Customer Blocked Domains: </b>
+<br />
+{% for item in blocked_domains %}
+{{item}} <br />
+{% endfor %}
+
+<br />
+<br />
+
+
+{% endblock %}
+
+<!-- disable footer for this page  -->
+{% block footer %}{% endblock %}

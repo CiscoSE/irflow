@@ -82,6 +82,8 @@ def testing():
     #find_malware_events_from_amp()
     #incident_room = create_new_webex_teams_incident_room()
     #block_with_umbrella('gibberish.com')
+    list_blocked_domains_from_umbrella()
+
 
 def find_malware_events_from_amp():
     '''
@@ -422,6 +424,26 @@ def block_with_umbrella(domain_name):
     response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
 
     print(response.text)
+
+def list_blocked_domains_from_umbrella():
+    '''
+    Lists all customer blocked domains with Umbrella Enforcement.
+    '''
+    blocked_domains = []
+    url = "https://s-platform.api.opendns.com/1.0/domains"
+
+    querystring = {"customerKey":config['umbrella']['key']}
+
+    headers = {
+        'Content-Type': "application/json"
+        }
+
+    response = requests.request("GET", url, headers=headers, params=querystring)
+
+    for domain in response.json()["data"]:
+        blocked_domains.append(domain["name"])
+
+    return(blocked_domains)
 
 def get_virustotal_report(sha):
     params = {'apikey': config['virustotal']['public_api'], 'resource': sha}

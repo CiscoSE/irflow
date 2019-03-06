@@ -81,13 +81,14 @@ def unnuke_from_space(mac):
 	return render_template('response.html', hosts=hosts_db)
 
 #Process for sending blocked domain to Umbrella
-@app.route('/block/<string:domain_name>', methods=['POST'])
+@app.route('/block/<string:domain_name>', methods=['GET', 'POST'])
 def block_with_umbrella(domain_name):
 	from app import block_with_umbrella
+	from app import list_blocked_domains_from_umbrella
 	print (domain_name)
 	block_with_umbrella(domain_name)
-	domain_details = domains_db.search(querydb.domain == domain_name)
-	return render_template('domain_research.html', domain=domain_details)
+	blocked_domains = list_blocked_domains_from_umbrella()
+	return render_template('blocked.html', blocked_domains=blocked_domains)
 
 @app.route('/research', methods=['GET', 'POST'])
 def research():
