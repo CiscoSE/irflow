@@ -114,10 +114,11 @@ def find_malware_events_from_amp(quarantine):
         #Check to see if the host is in the database or not.  If not add it.
         if bool(hosts_db.get(querydb.hostname == item['computer']['hostname'])) == False:
 
-            logged_in = find_active_user_from_ise((item['computer']['network_addresses'])[0]['ip'])
+            #logged_in = find_active_user_from_ise((item['computer']['network_addresses'])[0]['ip'])
             building = 'building'
             floor = 'floor'
             responder = 'responder'
+            logged_in = 'none'
 
             hosts_db.insert({'date':item['date'],
                          'hostname':item['computer']['hostname'],

@@ -70,14 +70,18 @@ threats_db = TinyDB('threats_db.json')
 domains_db = TinyDB('domains_db.json')
 querydb = Query()
 
-def main():
+def testing():
     print ('Starting...')
+
+    'These commands were used while testing the app from command line and can be safely ignored'
+
     #get_investigate_security_scores("bing.com")
     #get_investigate_domains("[\"www.bing.com\",\"github.com\",\"www.bing.com\",\"codeload.github.com\",\"7tno4hib47vlep5o.tor2web.fi\"]")
     #get_samples_from_threatgrid("ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa")
     #find_malware_events_from_cognitive()
     #find_malware_events_from_amp()
     #incident_room = create_new_webex_teams_incident_room()
+    #block_with_umbrella('gibberish.com')
 
 def find_malware_events_from_amp():
     '''
@@ -391,26 +395,28 @@ def get_investigate_domains(domains):
                            'security_cat':security_cat
                           })
 
-def block_with_umbrella(domain):
+def block_with_umbrella(domain_name):
     '''
     Creates a new custom block entry with Umbrella Enforcement.
     '''
-
+    date = datetime.datetime.now().replace(microsecond=0).isoformat()
     url = "https://s-platform.api.opendns.com/1.0/events"
 
     querystring = {"customerKey":config['umbrella']['key']}
 
-    payload = [{"alertTime":datetime.datetime.now().isoformat(),
-                "deviceId":"ba6a59f4-e692-4724-ba36-c28132c761de",
-                "deviceVersion":"13.7a",
-                "dstDomain":domain,
-                "dstUrl":"http://" + domain + "/",
-                "eventTime":datetime.datetime.now().isoformat(),
-                "protocolVersion":"1.0a",
-                "providerName":"Security Platform"}]
+    payload = '''[\n
+                 {\n    \"alertTime\": \"%(date)s.0Z\",
+                  \n    \"deviceId\": \"ba6a59f4-e692-4724-ba36-c28132c761de\",
+                  \n    \"deviceVersion\": \"13.7a\",
+                  \n    \"dstDomain\": \"%(domain_name)s\",
+                  \n    \"dstUrl\": \"http://%(domain_name)s/\",
+                  \n    \"eventTime\": \"%(date)s.0Z\",
+                  \n    \"protocolVersion\": \"1.0a\",
+                  \n    \"providerName\": \"Security Platform\"
+                  \n    }\n]''' % {"date":date, "domain_name":domain_name}
+
     headers = {
-        'Content-Type': "application/json",
-        'Cache-Control': "no-cache",
+        'Content-Type': "application/json"
         }
 
     response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
@@ -500,5 +506,5 @@ if __name__ == '__main__':
 #Start the App
 
 if __name__ == "__main__":
-    main()
+    testing()
 '''

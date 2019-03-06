@@ -66,7 +66,7 @@ def response():
 @app.route('/nuke_from_space/<string:mac>', methods=['POST'])
 def nuke_from_space(mac):
 	from app import quarantine_with_ise
-	quarantine_with_ise(mac)
+	#quarantine_with_ise(mac)
 	print (mac)
 	hosts_db.update({'quarantine': 'True'}, querydb.mac == mac)
 	return render_template('response.html', hosts=hosts_db)
@@ -75,7 +75,7 @@ def nuke_from_space(mac):
 @app.route('/unnuke_from_space/<string:mac>', methods=['POST'])
 def unnuke_from_space(mac):
 	from app import unquarantine_with_ise
-	unquarantine_with_ise(mac)
+	#unquarantine_with_ise(mac)
 	print (mac)
 	hosts_db.update({'quarantine': 'False'}, querydb.mac == mac)
 	return render_template('response.html', hosts=hosts_db)
@@ -84,9 +84,9 @@ def unnuke_from_space(mac):
 @app.route('/block/<string:domain_name>', methods=['POST'])
 def block_with_umbrella(domain_name):
 	from app import block_with_umbrella
-	block_with_umbrella(domain)
-	domain_details = domains_db.search(querydb.domain == domain_name)
 	print (domain_name)
+	block_with_umbrella(domain_name)
+	domain_details = domains_db.search(querydb.domain == domain_name)
 	return render_template('domain_research.html', domain=domain_details)
 
 @app.route('/research', methods=['GET', 'POST'])
